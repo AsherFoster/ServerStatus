@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html ng-app="myApp">
+    <head>
+        <title>UPT Digital - Servers</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+        <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+        <script>
+            var servers = [
+                {
+                    "url":"www.developster.io",
+                    "id":"dsl"
+                },
+                {
+                    "url":"alpha.developster.io",
+                    "id":"dsa"
+                },
+                {
+                    "url":"beta.developster.io",
+                    "id":"dsb"
+                },
+                {
+                    "url":"innovateforchch.nz",
+                    "id":"ifc"
+                },
+                {
+                    "url":"muute.net",
+                    "id":"mte"
+                },
+                {
+                    "url":"www.kohknowco.org",
+                    "id":"knc"
+                },
+                
+            ]
+            
+            setInterval(function(){
+                servers.forEach(function(val, a, b){
+                    $.ajax({
+                        url  : '/test.php?url='+encodeURIComponent(val.url),
+                        type : 'post',
+                        data : 'a=b',
+                        error: function(jqXHR, textStatus, errorThrown) {
+//                            if(textStatus==="timeout") {
+                                document.getElementById(val.id).style.background = "#F00";
+                                document.getElementById(val.id+'n').innerHTML = 'TO';
+//                            } 
+                        }
+                    }).done(function(data, statusText, xhr){
+//                        var status = xhr.status;                //200
+                        if(data == "ERR"){
+                            document.getElementById(val.id).style.background = "#F00";
+                            document.getElementById(val.id+'n').innerHTML = '';
+                        }else if(data == "200"){
+                            document.getElementById(val.id).style.background = "#0F0";
+                            document.getElementById(val.id+'n').innerHTML = '';
+                        }else{
+                            document.getElementById(val.id).style.background = "#F60";
+                            document.getElementById(val.id+'n').innerHTML = data;
+                        }
+//                        var head = xhr.getAllResponseHeaders(); //Detail header info
+                    });
+                })
+            },2000)
+            $.getJSON('//example.com/awesome.json?callback=?', function(remoteData){
+              console.log(remoteData)
+            })
+        </script>
+        <style>
+            *{
+                color: #FFF;
+                position: relative
+            }
+            html, body{
+                margin: 0;
+                width: 100%;
+                overflow-x: hidden;
+                overflow-y: hidden;
+                height: 100%;
+                background: #000;
+                font-family: 'Arial', sans-serif
+            }
+            .time{
+                -webkit-transform: rotate(270deg);
+                -moz-transform: rotate(270deg);
+                position: absolute;
+            }
+            #time{
+                font-size: 11.8em;
+                top: 435px;
+                left: -485px;
+            }
+            #date{
+                top: 465px;
+                left: -330px;
+                font-size: 6.7em;
+                border-top: 20px solid #000;
+            }
+            .srv{
+                top: 100px;
+                left: 28%;
+/*                margin: 20px;*/
+            }
+            .ind{
+                margin: 20px;
+                width: 100px;
+                height: 100px;
+                border-radius: 50%;
+                vertical-align: middle;
+                background: #F00;
+                display: inline-block;
+            }
+            .ind span{
+                top: 23px;
+                font-size: 2.5em;
+                text-align: center;
+                display: block;
+            }
+            .nm{
+                top: 25px;
+                font-size: 5em;
+            }
+        </style>
+        <script type="text/javascript">
+            var module = angular.module('myApp', []);
+
+            module.controller('TimeCtrl', function($scope, $interval) {
+              var tick = function() {
+                $scope.clock = Date.now();
+              }
+              tick();
+              $interval(tick, 1);
+            });
+        </script>
+    </head>
+    <body>
+        <div class="wrap" ng-controller="TimeCtrl">
+            <div class="time" id="time">{{clock | date:'hh:mm:ss:sss'}}</div>
+            <div class="time" id="date">{{clock | date:'EEEE dd MMMM'}}</div>
+            <div class="srv">
+                <span class="ind" id="dsl"><span id="dsln"></span></span>
+                <span class="nm">Developster Live</span>
+            </div>
+            <div class="srv">
+                <span class="ind" id="dsb"><span id="dsbn"></span></span>
+                <span class="nm">Developster Beta</span>
+            </div>
+            <div class="srv">
+                <span class="ind" id="dsa"><span id="dsan"></span></span>
+                <span class="nm">Developster Alpha</span>
+            </div>
+            <div class="srv">
+                <span class="ind" id="ifc"><span id="ifcn"></span></span>
+                <span class="nm">Innovate For ChCh</span>
+            </div>
+            <div class="srv">
+                <span class="ind" id="mte"><span id="mten"></span></span>
+                <span class="nm">Muute</span>
+            </div>
+            <div class="srv">
+                <span class="ind" id="knc"><span id="kncn"></span></span>
+                <span class="nm">Kohknowco</span>
+            </div>
+        </div>
+    </body>
+</html>

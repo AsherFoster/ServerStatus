@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html ng-app="status">
+    <head>
+        <title>UPT Digital - Servers</title>
+        <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+        <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-dateFormat/1.0/jquery.dateFormat.min.js"></script>
+        <script src="prefs.js"></script>
+        <script src="blocks.js"></script>
+        <script type="text/javascript">
+            var a, b, today, color, found, next, temp;
+            function getMinutes(str) {
+                var time = str.split(':');
+                return time[0]*60+time[1]*1;
+            }
+            function minutesNow() {
+                var timeNow = new Date();
+                return timeNow.getHours()*60+timeNow.getMinutes();
+            }
+            function slackMessage(message, simple){
+                if(simple) message = '{"text":"'+message+'"}';
+                if(prefs.slack.enabled) $.post(prefs.slack.webhook, message);
+            }
+            prefs.servers.forEach(function(val){
+                val.status = "OK";
+                val.strike = 0;
+            });
+            setInterval(function(){
+                prefs.servers.forEach(function(val, id){
+                    $.ajax({
+                        url  : prefs.testPage+encodeURIComponent(val.url),
+                        type : 'get',
+                        timeout: prefs.timeout,
+                        error: function(nope, err) {
+                            document.getElementById("s"+id).style.background = "#F00";
+                            document.getElementById("s"+id).title = err;
+                            if(val.status != "DOWN" && val.strike > 1){
+                                slackMessage("Server <"+val.url+"|"+val.name+"> is offline ("+err+")" ,true);
+                                val.status = "DOWN";
+                                val.strike = 0;
+                            }
+                            val.strike++;
+                        }
+                        
+                    }).done(function(data, statusText, xhr){
+                        data = JSON.parse(data);
+                        if(data.code == "ERR"){
+                            document.getElementById("s"+id).style.background = prefs.colors.offline;
+                            document.getElementById("s"+id).title = data.text;
+                            document.getElementById("sn"+id).innerHTML = '';
+                            if(val.status != "DOWN" && val.strike > 1){
+                                slackMessage("Server <"+val.url+"|"+val.name+"> is offline (Unknown Reason)" ,true);
+                                val.strike = 0;
+                                val.status = "DOWN";
+                            }
+                            val.strike++;
+                            
+                        }else if(data.code == "200"){
+                            document.getElementById("s"+id).style.background = prefs.colors.online;
+                            document.getElementById("s"+id).title = data.text;
+                            document.getElementById("sn"+id).innerHTML = '';
+                            if(val.status != "OK" && val.strike > 1){
+                                slackMessage("Server <"+val.url+"|"+val.name+"> is back online" ,true);
+                                val.strike = 0;
+                                val.status = "OK";
+                            }
+                            if(val.status != "OK"){
+                                val.strike++;   
+                            }
+                            
+                        }else{
+                            document.getElementById("s"+id).style.background = prefs.colors.abnormal;
+                            document.getElementById("s"+id).title = data.text;
+                            document.getElementById("sn"+id).innerHTML = data.code;
+                            if(val.status != "DOWN" && val.strike > 1){
+                                slackMessage("Server <"+val.url+"|"+val.name+"> is offline (Code "+data.code+". "+data.text+")" ,true);
+                                val.strike = 0;
+                                val.status = "ERR";
+                            }
+                            val.strike++;
+                        }
+                    });
+                })
+            },prefs.checkRate)
+            var app = angular.module('status', []);
+            app.controller('ServerCtrl', function($scope){
+                $scope.servers = prefs.servers;
+                $scope.color = prefs.colors;
+            });
+            app.controller('WidgetCtrl', function($scope, $interval) {
+                $scope.prefs = prefs;
+                function tick() {
+                    $scope.clock = Date.now();
+                }
+                function getColor(){
+                    blocks[$.format.date(Date(), "ddd").substr(0,3)].forEach(function(val, ind, arr){
+//                        console.log(val);
+                        if(getMinutes(val.start) < minutesNow() && getMinutes(val.end) > minutesNow()){
+                            if(arr[ind+1]){
+                                next = arr[ind+1]
+                            }else{
+                                next = {
+                                    "color":"#FFF",
+                                    "name": "Home",
+                                    "start": val.end
+                                }
+                            }
+                            $scope.color = {
+                                "color": val.color,
+                                "name": val.name,
+                                "next":next
+                            }
+                            found = true;
+                            return;
+                        }
+                    });
+                    if(!found){
+                        $scope.color = {
+                            "name": "Not Found",
+                            "color": "#FFFFFF",
+                        };
+                    }else{
+                        found = false;
+                    }
+                }
+                function countBlock(){
+//                    console.log(color);
+//                    $scope.countDown = getMinutes(color.next.start) - minutesNow();
+                }
+                function getTemp(){
+                    $.ajax({
+                        url  : "http://stationdata.wunderground.com/cgi-bin/stationlookup?format=json&maxage=10&station=ICANTERB8&units=metric&v=2.0",
+                        type : 'get',
+                        timeout: prefs.timeout,
+                        error: function(nope, err, b) {
+                            $scope.temp = "ERR";
+                            console.log(err+" || "+b);
+                        }
+                    }).done(function(data){
+                            $scope.temp = data.stations.ICANTERB8 || $scope.temp;
+                        });
+                }
+                
+                getColor();
+                tick();
+                getTemp();
+                
+//                $interval(countBlock, 6000);
+                $interval(getTemp, 5000);
+                $interval(getColor, 2000);
+                $interval(tick, 100);
+            });
+        </script>
+        <style type="text/css">
+            *{
+                color: #FFF;
+                position: relative
+            }
+            html, body{
+                margin: 0;
+                width: 100%;
+                overflow-x: hidden;
+                overflow-y: hidden;
+                height: 100%;
+                background: #000;
+                font-family: 'Arial', sans-serif
+            }
+            .wrap{
+                position: absolute;
+                top: -5px;
+            }
+            .wrap *{
+                font-size: 5.5em;
+            }
+            #block{
+                font-size: 9em;
+                margin-bottom: -20px;
+            }
+            #time{
+                font-size: 8em;
+                margin-bottom: -20px;
+            }
+            #date{
+                font-size: 4.8em;
+            }
+            #temp{
+                font-size: 10em;
+            }
+            #nextBlock{
+                font-size: 3em;
+                left: 5px
+            }
+            .srv{
+                top: 70px;
+                left: 35%;
+            }
+            .ind{
+                background: #F00 url(loading.svg) center no-repeat;
+                background-size: 70px;
+                margin: 20px;
+                width: 100px;
+                height: 100px;
+                border-radius: 50%;
+                vertical-align: middle;
+                display: inline-block;
+            }
+            .ind span{
+                top: 27px;
+                font-size: 2.5em;
+                text-align: center;
+                display: block;
+            }
+            .nm{
+                top: 25px;
+                font-size: 5em;
+            }
+            .key-c{
+                width: 50px;
+                height: 50px;
+                margin: 5px;
+                vertical-align: middle;
+                border-radius: 50%;
+                display: inline-block;
+            }
+            .key-w{
+                float: right;
+                position: fixed;
+                font-size: 1.5em;
+            }
+            .key{
+                font-size: 2.4em;
+            }
+        </style>
+    </head>
+    <body id="body">
+        <div class="wrap" ng-controller="WidgetCtrl">
+            <div class="widget" id="block" ng-show="prefs.showBlock" style="color:{{color.color}}">{{color.name | uppercase}}</div>
+            <div class="widget" id="nextBlock" ng-show="prefs.showNextBlock" style="color:{{color.next.color}}">Next: {{color.next.name | uppercase}} at {{color.next.start | date:'HH:mm:ss'}}</div>
+            <div class="widget" id="countBlock" ng-show="prefs.showcountBlock">{{countDown}}</div>
+            <div class="widget" id="time" ng-show="prefs.showTime" style="color:{{color}}">{{clock | date:'HH:mm:ss'}}</div>
+            <div class="widget" id="date" ng-show="prefs.showDay">{{clock | date:'dd MMMM'}}</div>
+            <div class="widget" id="day" ng-show="prefs.showDate">{{clock | date:'EEEE'}}</div>
+            <div class="widget" id="temp" ng-show="prefs.showTemp">{{temp.temperature}}&deg;C</div>
+            <div class="key-w" ng-show="prefs.showKey" ng-controller="ServerCtrl">
+                <div class="key">
+                    <span class="key-c" style="background:{{color.online}}"></span>Online (200)
+                </div>
+                <div class="key">
+                    <span class="key-c" style="background:{{color.abnormal}}"></span>Abnormal (!200)
+                </div>
+                <div class="key">
+                    <span class="key-c" style="background:{{color.offline}}"></span>Offline (Timeout)
+                </div>
+            </div>
+        </div>
+        <div class="ind-w" ng-controller="ServerCtrl">
+            <div class="srv" ng-repeat="(num, server) in servers">
+                <span class="ind" id="s{{num}}"><span id="sn{{num}}"></span></span>
+                <span class="nm" style="color:{{(servers[num].status == 'ERR') ? color.offline : '#FFFFFF'}}">{{server.name}}</span>
+            </div>
+        </div>
+    </body>
+</html>
