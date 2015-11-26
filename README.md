@@ -1,2 +1,3 @@
 # ServerStatus
-A nice little angular/jquery web app. Uses PHP :(.
+A Angular.js web app for showing server statuses and temperatures etc.
+Currently uses PHP for testing server
