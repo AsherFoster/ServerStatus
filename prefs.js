@@ -11,14 +11,15 @@ var prefs = {
     "testPage":"/test.php?url=", // Page to test if server is up. Page must return status code in plain text
     "checkRate":2000, // How often (in milliseconds) should the servers be checked
     "slack":{
-        "enabled":"true",
-        "webhook":"https://hooks.slack.com/services/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"
+        "enabled":"true", // Whether to send messages to slack
+        "webhook":"https://hooks.slack.com/services/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", // Slack webhook. See "Webhook intergrations" in slack intergrations for more info
+        "threshold":3 // Amount of connection attempts must fail before alerting Slack
     },
-    "servers": [ // Servers to show
+    "servers": [ // List of servers to check
         // {
-        // "name":"Name to display",
-        // "url":"URL to check. Redirects will show as abnormal MUST HAVE PROTOCOL"
-        // }
+        // "name":"Example Server", Server name
+        // "url":"http://example.com" URL to check. Redirects will show as abnormal NOTE: If using slack, protocols are a requirement
+        // },
         {
             "name": "Developster Live",
             "url": "http://www.developster.io"
