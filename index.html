@@ -8,7 +8,13 @@
         <script src="prefs.js"></script>
         <script src="blocks.js"></script>
         <script type="text/javascript">
-            var a, b, today, color, found, next, temp;
+            var a, b, today, color, found, next, temp,
+                todayBlocks = blocks[$.format.date(Date(), "ddd").substr(0,3)] || [{
+                    "data":"dayEmpty",
+                    "start":"0:00",
+                    "end":"23:59",
+                    "name":"NOTHING"
+                }];
             function getMinutes(str) {
                 var time = str.split(':');
                 return time[0]*60+time[1]*1;
@@ -24,6 +30,7 @@
             prefs.servers.forEach(function(val){
                 val.status = "OK";
                 val.strike = 0;
+                if(val.alert == undefined) val.alert = true;
             });
             setInterval(function(){
                 prefs.servers.forEach(function(val, id){
@@ -33,13 +40,15 @@
                         timeout: prefs.timeout,
                         error: function(nope, err) {
                             document.getElementById("s"+id).style.background = "#F00";
+                            document.getElementById("snm"+id).style.color = "#F00";
                             document.getElementById("s"+id).title = err;
-                            if(val.status != "DOWN" && val.strike > 1){
+                            document.getElementById("sn"+id).innerHTML = '';
+                            if(val.status != "DOWN" && val.strike > prefs.slack.threshold && val.alert){
                                 slackMessage("Server <"+val.url+"|"+val.name+"> is offline ("+err+")" ,true);
                                 val.status = "DOWN";
                                 val.strike = 0;
                             }
-                            val.strike++;
+                            if(val.status != "DOWN" && val.alert) val.strike++;
                         }
                         
                     }).done(function(data, statusText, xhr){
@@ -47,37 +56,37 @@
                         if(data.code == "ERR"){
                             document.getElementById("s"+id).style.background = prefs.colors.offline;
                             document.getElementById("s"+id).title = data.text;
+                            document.getElementById("snm"+id).style.color = "#F00";
                             document.getElementById("sn"+id).innerHTML = '';
-                            if(val.status != "DOWN" && val.strike > 1){
-                                slackMessage("Server <"+val.url+"|"+val.name+"> is offline (Unknown Reason)" ,true);
+                            if(val.status != "DOWN" && val.strike > prefs.slack.threshold && val.alert){
+                                slackMessage("Server <"+val.url+"|"+val.name+"> is offline (ERR)" ,true);
                                 val.strike = 0;
                                 val.status = "DOWN";
                             }
-                            val.strike++;
+                            if(val.status != "DOWN" && val.alert) val.strike++;
                             
                         }else if(data.code == "200"){
                             document.getElementById("s"+id).style.background = prefs.colors.online;
                             document.getElementById("s"+id).title = data.text;
                             document.getElementById("sn"+id).innerHTML = '';
-                            if(val.status != "OK" && val.strike > 1){
+                            document.getElementById("snm"+id).style.color = "#FFF";
+                            if(val.status != "OK" && val.strike > prefs.slack.threshold && val.alert){
                                 slackMessage("Server <"+val.url+"|"+val.name+"> is back online" ,true);
                                 val.strike = 0;
                                 val.status = "OK";
                             }
-                            if(val.status != "OK"){
-                                val.strike++;   
-                            }
+                            if(val.status != "OK" && val.alert) val.strike++;
                             
                         }else{
                             document.getElementById("s"+id).style.background = prefs.colors.abnormal;
                             document.getElementById("s"+id).title = data.text;
                             document.getElementById("sn"+id).innerHTML = data.code;
-                            if(val.status != "DOWN" && val.strike > 1){
+                            if(val.status != "DOWN" && val.strike > 1 && val.alert){
                                 slackMessage("Server <"+val.url+"|"+val.name+"> is offline (Code "+data.code+". "+data.text+")" ,true);
                                 val.strike = 0;
                                 val.status = "ERR";
                             }
-                            val.strike++;
+                            if(val.strike != "ERR" && val.alert) val.strike++;
                         }
                     });
                 })
@@ -93,7 +102,7 @@
                     $scope.clock = Date.now();
                 }
                 function getColor(){
-                    blocks[$.format.date(Date(), "ddd").substr(0,3)].forEach(function(val, ind, arr){
+                    todayBlocks.forEach(function(val, ind, arr){
 //                        console.log(val);
                         if(getMinutes(val.start) < minutesNow() && getMinutes(val.end) > minutesNow()){
                             if(arr[ind+1]){
@@ -123,29 +132,22 @@
                         found = false;
                     }
                 }
-                function countBlock(){
-//                    console.log(color);
-//                    $scope.countDown = getMinutes(color.next.start) - minutesNow();
-                }
                 function getTemp(){
                     $.ajax({
                         url  : "http://stationdata.wunderground.com/cgi-bin/stationlookup?format=json&maxage=10&station=ICANTERB8&units=metric&v=2.0",
                         type : 'get',
-                        timeout: prefs.timeout,
                         error: function(nope, err, b) {
-                            $scope.temp = "ERR";
-                            console.log(err+" || "+b);
+                            console.log("Unable to load temperature. Err name: "+err+". Err details: "+b);
                         }
                     }).done(function(data){
                             $scope.temp = data.stations.ICANTERB8 || $scope.temp;
-                        });
+                    });
                 }
                 
                 getColor();
                 tick();
                 getTemp();
                 
-//                $interval(countBlock, 6000);
                 $interval(getTemp, 5000);
                 $interval(getColor, 2000);
                 $interval(tick, 100);
@@ -236,7 +238,6 @@
         <div class="wrap" ng-controller="WidgetCtrl">
             <div class="widget" id="block" ng-show="prefs.showBlock" style="color:{{color.color}}">{{color.name | uppercase}}</div>
             <div class="widget" id="nextBlock" ng-show="prefs.showNextBlock" style="color:{{color.next.color}}">Next: {{color.next.name | uppercase}} at {{color.next.start | date:'HH:mm:ss'}}</div>
-            <div class="widget" id="countBlock" ng-show="prefs.showcountBlock">{{countDown}}</div>
             <div class="widget" id="time" ng-show="prefs.showTime" style="color:{{color}}">{{clock | date:'HH:mm:ss'}}</div>
             <div class="widget" id="date" ng-show="prefs.showDay">{{clock | date:'dd MMMM'}}</div>
             <div class="widget" id="day" ng-show="prefs.showDate">{{clock | date:'EEEE'}}</div>
@@ -249,14 +250,14 @@
                     <span class="key-c" style="background:{{color.abnormal}}"></span>Abnormal (!200)
                 </div>
                 <div class="key">
-                    <span class="key-c" style="background:{{color.offline}}"></span>Offline (Timeout)
+                    <span class="key-c" style="background:{{color.offline}}"></span>Offline ({{prefs.timeout/1000}}s Timeout)
                 </div>
             </div>
         </div>
         <div class="ind-w" ng-controller="ServerCtrl">
             <div class="srv" ng-repeat="(num, server) in servers">
                 <span class="ind" id="s{{num}}"><span id="sn{{num}}"></span></span>
-                <span class="nm" style="color:{{(servers[num].status == 'ERR') ? color.offline : '#FFFFFF'}}">{{server.name}}</span>
+                <span class="nm" id="snm{{num}}" style="color:{{(servers[num].status == 'ERR') ? color.offline : '#FFFFFF'}}">{{server.name}}</span>
             </div>
         </div>
     </body>
