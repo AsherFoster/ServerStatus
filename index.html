@@ -48,6 +48,10 @@
                                 val.status = "DOWN";
                                 val.strike = 0;
                             }
+                            if(val.lastStatus != "DOWN" && val.alert){
+                                val.strike = 0;
+                                val.lastStatus = "DOWN";
+                            }
                             if(val.status != "DOWN" && val.alert) val.strike++;
                         }
                         
@@ -63,6 +67,10 @@
                                 val.strike = 0;
                                 val.status = "DOWN";
                             }
+                            if(val.lastStatus != "DOWN" && val.alert){
+                                val.strike = 0;
+                                val.lastStatus = "DOWN";
+                            }
                             if(val.status != "DOWN" && val.alert) val.strike++;
                             
                         }else if(data.code == "200"){
@@ -75,6 +83,10 @@
                                 val.strike = 0;
                                 val.status = "OK";
                             }
+                            if(val.lastStatus != "OK" && val.alert){
+                                val.strike = 0;
+                                val.lastStatus = "OK";
+                            }
                             if(val.status != "OK" && val.alert) val.strike++;
                             
                         }else{
@@ -85,6 +97,10 @@
                                 slackMessage("Server <"+val.url+"|"+val.name+"> is offline (Code "+data.code+". "+data.text+")" ,true);
                                 val.strike = 0;
                                 val.status = "ERR";
+                            }
+                            if(val.lastStatus != "ERR" && val.alert){
+                                val.strike = 0;
+                                val.lastStatus = "ERR";
                             }
                             if(val.strike != "ERR" && val.alert) val.strike++;
                         }
@@ -104,7 +120,7 @@
                 function getColor(){
                     todayBlocks.forEach(function(val, ind, arr){
 //                        console.log(val);
-                        if(getMinutes(val.start) < minutesNow() && getMinutes(val.end) > minutesNow()){
+                        if(getMinutes(val.start) <= minutesNow() && getMinutes(val.end) > minutesNow()){
                             if(arr[ind+1]){
                                 next = arr[ind+1]
                             }else{
@@ -193,7 +209,7 @@
                 left: 5px
             }
             .srv{
-                top: 70px;
+                top: 50px;
                 left: 35%;
             }
             .ind{
