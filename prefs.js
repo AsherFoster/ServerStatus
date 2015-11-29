@@ -12,8 +12,8 @@ var prefs = {
     "checkRate":2000, // How often (in milliseconds) should the servers be checked
     "threshold":2, // How many attempts must fail before updating status
     "slack":{
-        "enabled":"true", // Whether to send messages to slack
-        "webhook":"https://hooks.slack.com/services/WEBHOOKID", // Slack webhook. See "Webhook intergrations" in slack intergrations for more info
+        "enabled":"false", // Whether to send messages to slack
+        "webhook":"https://hooks.slack.com/services/{WEBHOOKID}", // Slack webhook. See "Webhook intergrations" in slack intergrations for more info
         "threshold":3 // How many attempts must fail before alerting Slack
     },
     "servers": [ // List of servers to check
@@ -22,33 +22,25 @@ var prefs = {
         // "url":"http://example.com" URL to check. Redirects will show as abnormal NOTE: If using slack, protocols are a requirement
         // },
         {
-            "name": "Developster Live",
-            "url": "http://www.developster.io"
+            "name": "Google",
+            "url": "http://google.com"
         },
         {
-            "name": "Developster Beta",
-            "url": "http://beta.developster.io"
+            "name": "Stack Overflow",
+            "url": "http://stackoverflow.com"
         },
         {
-            "name": "Developster Alpha",
-            "url": "http://alpha.developster.io",
+            "name": "Github",
+            "url": "http://github.com",
             "alert":false
         },
         {
-            "name": "Innovate For ChCh",
-            "url": "http://innovateforchch.nz"
+            "name": "Bitbucket",
+            "url": "http://bitbucket.org"
         },
         {
-            "name": "Muute",
-            "url": "http://muute.net"
-        },
-        {
-            "name": "Kohknowco",
-            "url": "http://www.kohknowco.org"
-        },
-        {
-            "name": "UPT Digital",
-            "url": "http://uptdigital.com"
+            "name": "Trello",
+            "url": "http://trello.com"
         }
     ],
     "colors":{
