@@ -12,7 +12,7 @@ var prefs = {
     "checkRate":2000, // How often (in milliseconds) should the servers be checked
     "threshold":2, // How many attempts must fail before updating status
     "slack":{
-        "enabled":"true", // Whether to send messages to slack
+        "enabled":true, // Whether to send messages to slack
         "webhook":"https://hooks.slack.com/services/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", // Slack webhook. See "Webhook intergrations" in slack intergrations for more info
         "threshold":3 // How many attempts must fail before alerting Slack
     },
