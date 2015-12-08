@@ -23,88 +23,81 @@
                 var timeNow = new Date();
                 return timeNow.getHours()*60+timeNow.getMinutes();
             }
-            function slackMessage(message, simple){
-                if(simple) message = '{"text":"'+message+'"}';
-                if(prefs.slack.enabled) $.post(prefs.slack.webhook, message);
+            function setStatus(id, status, color){
+                document.getElementById("s"+id).style.background = color.color;
+                document.getElementById("s"+id).title = status.text;
+                document.getElementById("sn"+id).innerHTML = status.code || '';
+                document.getElementById("snm"+id).style.color = color.text || prefs.colors.text;
+//                if(val.status != "DOWN" && val.strike > prefs.slack.threshold && val.alert){
+//                    slackMessage("Server <"+val.url+"|"+val.name+"> is offline (ERR)" ,true);
+//                    val.strike = 0;
+//                    val.status = "DOWN";
+//                }
+//                if(val.lastStatus != "DOWN" && val.alert){
+//                    val.strike = 0;
+//                    val.lastStatus = "DOWN";
+//                }
+//                if(val.status != "DOWN" && val.alert) val.strike++;
             }
+//          NOTE: Removed Slack message indefinitely due to security issues
+//            function slackMessage(message, simple){
+//                if(simple) message = '{"text":"'+message+'"}';
+//                if(prefs.slack.enabled) $.post(prefs.slack.webhook, message);
+//            }
             prefs.servers.forEach(function(val){
                 val.status = "OK";
-                val.strike = 0;
-                if(val.alert == undefined) val.alert = true;
+//                val.strike = 0;
+//                if(val.alert == undefined) val.alert = true;
             });
             setInterval(function(){
                 prefs.servers.forEach(function(val, id){
-                    $.ajax({
-                        url  : prefs.testPage+encodeURIComponent(val.url),
-                        type : 'get',
-                        timeout: prefs.timeout,
-                        error: function(nope, err) {
-                            document.getElementById("s"+id).style.background = "#F00";
-                            document.getElementById("snm"+id).style.color = "#F00";
-                            document.getElementById("s"+id).title = err;
-                            document.getElementById("sn"+id).innerHTML = '';
-                            if(val.status != "DOWN" && val.strike > prefs.slack.threshold && val.alert){
-                                slackMessage("Server <"+val.url+"|"+val.name+"> is offline ("+err+")" ,true);
-                                val.status = "DOWN";
-                                val.strike = 0;
+                    if(val.check){
+                        val.check(val, id);
+                    }else{
+                        $.ajax({
+                            url  : prefs.testPage+encodeURIComponent(val.url),
+                            type : 'get',
+                            timeout: prefs.timeout,
+                            error: function(nope, err) {
+                                setStatus(id, {
+                                    "text":err
+                                },{
+                                    "color":prefs.colors.offline,
+                                    "text":"#F00"
+                                });
                             }
-                            if(val.lastStatus != "DOWN" && val.alert){
-                                val.strike = 0;
-                                val.lastStatus = "DOWN";
+
+                        }).done(function(data, statusText, xhr){
+                            data = JSON.parse(data);
+                            switch(data.code){
+                                case "ERR":
+                                    setStatus(id, {
+                                        "text":data.text
+                                    },{
+                                        "color":prefs.colors.offline,
+                                        "text":"#F00"
+                                    });
+                                    break;
+
+                                case 200:
+                                    setStatus(id, {
+                                        "text":data.text
+                                    },{
+                                        "color":prefs.colors.online
+                                    });
+                                    break;
+
+                                default:
+                                    setStatus(id, {
+                                        "text":data.text,
+                                        "code":data.code
+                                    },{
+                                        "color":prefs.colors.abnormal
+                                    });
+                                    break;
                             }
-                            if(val.status != "DOWN" && val.alert) val.strike++;
-                        }
-                        
-                    }).done(function(data, statusText, xhr){
-                        data = JSON.parse(data);
-                        if(data.code == "ERR"){
-                            document.getElementById("s"+id).style.background = prefs.colors.offline;
-                            document.getElementById("s"+id).title = data.text;
-                            document.getElementById("snm"+id).style.color = "#F00";
-                            document.getElementById("sn"+id).innerHTML = '';
-                            if(val.status != "DOWN" && val.strike > prefs.slack.threshold && val.alert){
-                                slackMessage("Server <"+val.url+"|"+val.name+"> is offline (ERR)" ,true);
-                                val.strike = 0;
-                                val.status = "DOWN";
-                            }
-                            if(val.lastStatus != "DOWN" && val.alert){
-                                val.strike = 0;
-                                val.lastStatus = "DOWN";
-                            }
-                            if(val.status != "DOWN" && val.alert) val.strike++;
-                            
-                        }else if(data.code == "200"){
-                            document.getElementById("s"+id).style.background = prefs.colors.online;
-                            document.getElementById("s"+id).title = data.text;
-                            document.getElementById("sn"+id).innerHTML = '';
-                            document.getElementById("snm"+id).style.color = "#FFF";
-                            if(val.status != "OK" && val.strike > prefs.slack.threshold && val.alert){
-                                slackMessage("Server <"+val.url+"|"+val.name+"> is back online" ,true);
-                                val.strike = 0;
-                                val.status = "OK";
-                            }
-                            if(val.lastStatus != "OK" && val.alert){
-                                val.strike = 0;
-                                val.lastStatus = "OK";
-                            }
-                            if(val.status != "OK" && val.alert) val.strike++;
-                            
-                        }else{
-                            document.getElementById("s"+id).style.background = prefs.colors.abnormal;
-                            document.getElementById("s"+id).title = data.text;
-                            document.getElementById("sn"+id).innerHTML = data.code;
-                            if(val.status != "DOWN" && val.strike > 1 && val.alert){
-                                slackMessage("Server <"+val.url+"|"+val.name+"> is offline (Code "+data.code+". "+data.text+")" ,true);
-                                val.strike = 0;
-                                val.status = "ERR";
-                            }
-                            if(val.lastStatus != "ERR" && val.alert){
-                                val.strike = 0;
-                                val.lastStatus = "ERR";
-                            }
-                            if(val.strike != "ERR" && val.alert) val.strike++;
-                        }
-                    });
+                        });
+                    }
                 })
             },prefs.checkRate)
             var app = angular.module('status', []);
@@ -119,7 +112,6 @@
                 }
                 function getColor(){
                     todayBlocks.forEach(function(val, ind, arr){
-//                        console.log(val);
                         if(getMinutes(val.start) <= minutesNow() && getMinutes(val.end) > minutesNow()){
                             if(arr[ind+1]){
                                 next = arr[ind+1]
@@ -150,7 +142,7 @@
                 }
                 function getTemp(){
                     $.ajax({
-                        url  : "http://stationdata.wunderground.com/cgi-bin/stationlookup?format=json&maxage=10&station=ICANTERB8&units=metric&v=2.0",
+                        url  : prefs.temp.url,
                         type : 'get',
                         error: function(nope, err, b) {
                             console.log("Unable to load temperature. Err name: "+err+". Err details: "+b);
@@ -164,7 +156,7 @@
                 tick();
                 getTemp();
                 
-                $interval(getTemp, 5000);
+                $interval(getTemp, 10000);
                 $interval(getColor, 2000);
                 $interval(tick, 100);
             });
@@ -180,7 +172,6 @@
                 overflow-x: hidden;
                 overflow-y: hidden;
                 height: 100%;
-                background: #000;
                 font-family: 'Arial', sans-serif
             }
             .wrap{
@@ -257,7 +248,7 @@
             <div class="widget" id="time" ng-show="prefs.showTime" style="color:{{color}}">{{clock | date:'HH:mm:ss'}}</div>
             <div class="widget" id="date" ng-show="prefs.showDay">{{clock | date:'dd MMMM'}}</div>
             <div class="widget" id="day" ng-show="prefs.showDate">{{clock | date:'EEEE'}}</div>
-            <div class="widget" id="temp" ng-show="prefs.showTemp">{{temp.temperature}}&deg;C</div>
+            <div class="widget" id="temp" ng-show="prefs.showTemp">{{temp.temperature}}&deg;</div>
             <div class="key-w" ng-show="prefs.showKey" ng-controller="ServerCtrl">
                 <div class="key">
                     <span class="key-c" style="background:{{color.online}}"></span>Online (200)
@@ -276,5 +267,6 @@
                 <span class="nm" id="snm{{num}}" style="color:{{(servers[num].status == 'ERR') ? color.offline : '#FFFFFF'}}">{{server.name}}</span>
             </div>
         </div>
+        <script>document.getElementById("body").setAttribute("style", "background: "+prefs.colors.background);</script>
     </body>
 </html>
