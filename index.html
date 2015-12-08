@@ -159,6 +159,9 @@
                 $interval(getTemp, 10000);
                 $interval(getColor, 2000);
                 $interval(tick, 100);
+                setTimeout(function(){
+                    window.location.reload();
+                }, 3600000);
             });
         </script>
         <style type="text/css">
