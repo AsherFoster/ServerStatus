@@ -8,6 +8,10 @@
         <script src="prefs.js"></script>
         <script src="blocks.js"></script>
         <script type="text/javascript">
+            var app = angular.module('status', []);
+            Array.prototype.last = function(){
+                return this[this.length - 1];
+            };
             var a, b, today, color, found, next, temp,
                 todayBlocks = blocks[$.format.date(Date(), "ddd").substr(0,3)] || [{
                     "data":"dayEmpty",
@@ -28,27 +32,7 @@
                 document.getElementById("s"+id).title = status.text;
                 document.getElementById("sn"+id).innerHTML = status.code || '';
                 document.getElementById("snm"+id).style.color = color.text || prefs.colors.text;
-//                if(val.status != "DOWN" && val.strike > prefs.slack.threshold && val.alert){
-//                    slackMessage("Server <"+val.url+"|"+val.name+"> is offline (ERR)" ,true);
-//                    val.strike = 0;
-//                    val.status = "DOWN";
-//                }
-//                if(val.lastStatus != "DOWN" && val.alert){
-//                    val.strike = 0;
-//                    val.lastStatus = "DOWN";
-//                }
-//                if(val.status != "DOWN" && val.alert) val.strike++;
-            }
-//          NOTE: Removed Slack message indefinitely due to security issues
-//            function slackMessage(message, simple){
-//                if(simple) message = '{"text":"'+message+'"}';
-//                if(prefs.slack.enabled) $.post(prefs.slack.webhook, message);
-//            }
-            prefs.servers.forEach(function(val){
-                val.status = "OK";
-//                val.strike = 0;
-//                if(val.alert == undefined) val.alert = true;
-            });
+            };
             setInterval(function(){
                 prefs.servers.forEach(function(val, id){
                     if(val.check){
@@ -99,13 +83,12 @@
                         });
                     }
                 })
-            },prefs.checkRate)
-            var app = angular.module('status', []);
+            },prefs.checkRate);
             app.controller('ServerCtrl', function($scope){
                 $scope.servers = prefs.servers;
                 $scope.color = prefs.colors;
-            });
-            app.controller('WidgetCtrl', function($scope, $interval) {
+            })
+            .controller('WidgetCtrl', function($scope, $interval) {
                 $scope.prefs = prefs;
                 function tick() {
                     $scope.clock = Date.now();
@@ -117,38 +100,58 @@
                                 next = arr[ind+1]
                             }else{
                                 next = {
-                                    "color":"#FFF",
                                     "name": "Home",
                                     "start": val.end
                                 }
                             }
                             $scope.color = {
-                                "color": val.color,
-                                "name": val.name,
+                                "now":{
+                                    "color": val.color,
+                                    "name": val.name
+                                },
                                 "next":next
                             }
                             found = true;
                             return;
                         }
                     });
-                    if(!found){
+                    if(!found && minutesNow() < getMinutes(todayBlocks[0].start)){
+                        console.log("Before and stuff");
                         $scope.color = {
-                            "name": "Not Found",
-                            "color": "#FFFFFF",
-                        };
-                    }else{
-                        found = false;
+                            "now":{
+                                "name": "Morning"
+                            },
+                            "next":todayBlocks[0]
+                        }
+                    }else if(!found && minutesNow() >= getMinutes(todayBlocks.last().end)){
+                        $scope.color = {
+                            "now":{
+                                "name": "Go Home"
+                            },
+                            "next":{
+                                "disabled":true
+                            }
+                        }
+                    }else if(!found){
+                        $scope.color = {
+                            "now":{
+                                "name":"Error!"
+                            },
+                            "next":{
+                                "disabled":true
+                            }
+                        }
                     }
+                    found = false
                 }
                 function getTemp(){
                     $.ajax({
                         url  : prefs.temp.url,
-                        type : 'get',
                         error: function(nope, err, b) {
                             console.log("Unable to load temperature. Err name: "+err+". Err details: "+b);
                         }
                     }).done(function(data){
-                            $scope.temp = data.stations.ICANTERB8 || $scope.temp;
+                            $scope.temp = prefs.temp.getTemp(data) || $scope.temp;
                     });
                 }
                 
@@ -159,10 +162,10 @@
                 $interval(getTemp, 10000);
                 $interval(getColor, 2000);
                 $interval(tick, 100);
-                setTimeout(function(){
-                    window.location.reload();
-                }, 3600000);
             });
+            setTimeout(function(){
+                window.location.reload();
+            }, 3600000);
         </script>
         <style type="text/css">
             *{
@@ -246,12 +249,12 @@
     </head>
     <body id="body">
         <div class="wrap" ng-controller="WidgetCtrl">
-            <div class="widget" id="block" ng-show="prefs.showBlock" style="color:{{color.color}}">{{color.name | uppercase}}</div>
-            <div class="widget" id="nextBlock" ng-show="prefs.showNextBlock" style="color:{{color.next.color}}">Next: {{color.next.name | uppercase}} at {{color.next.start | date:'HH:mm:ss'}}</div>
+            <div class="widget" id="block" ng-show="prefs.showBlock" style="color:{{color.now.color || '#FFF'}}">{{color.now.name | uppercase}}</div>
+            <div class="widget" id="nextBlock" ng-show="prefs.showNextBlock && !color.next.disabled" style="color:{{color.next.color}}">Next: {{color.next.name | uppercase}} at {{color.next.start | date:'HH:mm:ss'}}</div>
             <div class="widget" id="time" ng-show="prefs.showTime" style="color:{{color}}">{{clock | date:'HH:mm:ss'}}</div>
             <div class="widget" id="date" ng-show="prefs.showDay">{{clock | date:'dd MMMM'}}</div>
             <div class="widget" id="day" ng-show="prefs.showDate">{{clock | date:'EEEE'}}</div>
-            <div class="widget" id="temp" ng-show="prefs.showTemp">{{temp.temperature}}&deg;</div>
+            <div class="widget" id="temp" ng-show="prefs.showTemp">{{temp}}&deg;</div>
             <div class="key-w" ng-show="prefs.showKey" ng-controller="ServerCtrl">
                 <div class="key">
                     <span class="key-c" style="background:{{color.online}}"></span>Online (200)

@@ -1,6 +1,6 @@
 var blockColors = {
     "purple":"#EE00EE",
-    "blue":"#3388FF",
+    "blue":"#1122EE",
     "yellow":"#FFFF00",
     "red":"#FF0000",
     "orange":"#FF6600",
