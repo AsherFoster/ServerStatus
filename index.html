@@ -40,7 +40,6 @@
                     }else{
                         $.ajax({
                             url  : prefs.testPage+encodeURIComponent(val.url),
-                            type : 'get',
                             timeout: prefs.timeout,
                             error: function(nope, err) {
                                 setStatus(id, {

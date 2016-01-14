@@ -57,7 +57,8 @@ var prefs = {
         "online":"#0F0", // Online server circle color
         "abnormal":"#F70", // Abnomal color
         "offline":"#F00", // Offline color
-        "background": "#1177FF url(pic.jpg) no-repeat center;background-size:contain", // Full page background
+//        "background": "#1177FF url(pic.jpg) no-repeat center;background-size:contain", // Full page background
+        "background":"#000",
         "text":"#FFF" // Color of all text
     }
 }
