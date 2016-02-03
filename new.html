@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html ng-app="serverStatus">
+    <head>
+        <title>Server Status</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+        <script src="prefs.js"></script>
+        <script src="blocks.js"></script>
+        <style type="text/css">
+            *{
+                font: 20px / 20px arial, sans-serif
+            }
+            .server{
+                font-size: 2em;
+            }
+            .server:before{
+                content: "";
+                display: inline-block;
+                border-radius: 50px;
+                height: 90px;
+                width: 90px;
+                background: #F00;
+                vertical-align: middle
+            }
+        </style>
+        <script type="text/javascript">
+            var app = angular.module("serverStatus", []);
+            
+            app.controller("main", function($scope, $http){
+                $scope.servers = prefs.servers;
+                $scope.prefs = prefs;
+            })
+        </script>
+    </head>
+    <body ng-controller="main" style="background:{{prefs.colors.background}};color:{{prefs.colors.text}}">
+        <div id="servers">
+            <div class="server" id="server-{{ind}}" ng-repeat="(ind, server) in servers">
+                {{server.name}}
+            </div>
+        </div>
+    </body>
+</html>

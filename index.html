@@ -3,17 +3,18 @@
     <head>
         <title>UPT Digital - Servers</title>
         <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
-        <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
-        <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-dateFormat/1.0/jquery.dateFormat.min.js"></script>
         <script src="prefs.js"></script>
         <script src="blocks.js"></script>
         <script type="text/javascript">
-            var app = angular.module('status', []);
+            Date.prototype.getDayName = function(){   
+                return ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][this.getDay()];
+            };
             Array.prototype.last = function(){
                 return this[this.length - 1];
             };
-            var a, b, today, color, found, next, temp,
-                todayBlocks = blocks[$.format.date(Date(), "ddd").substr(0,3)] || [{
+            var app = angular.module('status', []),
+                a, b, today, color, found, next, temp,
+                todayBlocks = blocks[new Date().getDayName().substr(0,3)] || [{
                     "data":"dayEmpty",
                     "start":"0:00",
                     "end":"23:59",
@@ -27,6 +28,12 @@
                 var timeNow = new Date();
                 return timeNow.getHours()*60+timeNow.getMinutes();
             }
+            function get(url, callback){
+                var oReq = new XMLHttpRequest();
+                oReq.addEventListener("load", callback);
+                oReq.open("GET", url);
+                oReq.send();
+            }
             function setStatus(id, status, color){
                 document.getElementById("s"+id).style.background = color.color;
                 document.getElementById("s"+id).title = status.text;
@@ -38,18 +45,9 @@
                     if(val.check){
                         val.check(val, id);
                     }else{
-                        $.ajax({
-                            url  : prefs.testPage+encodeURIComponent(val.url),
-                            timeout: prefs.timeout,
-                            error: function(nope, err) {
-                                setStatus(id, {
-                                    "text":err
-                                },{
-                                    "color":prefs.colors.offline,
-                                    "text":"#F00"
-                                });
-                            }
-
+                        $http({
+                            method: "GET",
+                            url: prefs.testPage+encodeURIComponent(val.url)
                         }).done(function(data, statusText, xhr){
                             data = JSON.parse(data);
                             switch(data.code){
@@ -79,15 +77,20 @@
                                     });
                                     break;
                             }
+                        },function(nope, err) {
+                            setStatus(id, {
+                                "text":err
+                            },{
+                                "color":prefs.colors.offline,
+                                "text":"#F00"
+                            });
                         });
                     }
                 })
             },prefs.checkRate);
-            app.controller('ServerCtrl', function($scope){
+            app.controller('main', function($scope, $interval, $http) {
                 $scope.servers = prefs.servers;
                 $scope.color = prefs.colors;
-            })
-            .controller('WidgetCtrl', function($scope, $interval) {
                 $scope.prefs = prefs;
                 function tick() {
                     $scope.clock = Date.now();
@@ -144,13 +147,13 @@
                     found = false
                 }
                 function getTemp(){
-                    $.ajax({
-                        url  : prefs.temp.url,
-                        error: function(nope, err, b) {
-                            console.log("Unable to load temperature. Err name: "+err+". Err details: "+b);
-                        }
-                    }).done(function(data){
-                            $scope.temp = prefs.temp.getTemp(data) || $scope.temp;
+                    $http({
+                        method: "GET",
+                        url: prefs.temp.url
+                    }).then(function(data){
+                        $scope.temp = prefs.temp.getTemp(data.data) || $scope.temp;
+                    }, function(nope, err, b) {
+                        console.error("Unable to load temperature. Err name: "+err+". Err details: "+b);
                     });
                 }
                 
@@ -210,7 +213,7 @@
             }
             .ind{
                 background: #F00 url(loading.svg) center no-repeat;
-                background-size: 70px;
+                background-size: 50px;
                 margin: 20px;
                 width: 100px;
                 height: 100px;
@@ -246,15 +249,15 @@
             }
         </style>
     </head>
-    <body id="body">
-        <div class="wrap" ng-controller="WidgetCtrl">
+    <body id="body" ng-controller="main">
+        <div class="wrap">
             <div class="widget" id="block" ng-show="prefs.showBlock" style="color:{{color.now.color || '#FFF'}}">{{color.now.name | uppercase}}</div>
             <div class="widget" id="nextBlock" ng-show="prefs.showNextBlock && !color.next.disabled" style="color:{{color.next.color}}">Next: {{color.next.name | uppercase}} at {{color.next.start | date:'HH:mm:ss'}}</div>
-            <div class="widget" id="time" ng-show="prefs.showTime" style="color:{{color}}">{{clock | date:'HH:mm:ss'}}</div>
+            <div class="widget" id="time" ng-show="prefs.showTime" style="color:{ {color}}">{{clock | date:'HH:mm:ss'}}</div>
             <div class="widget" id="date" ng-show="prefs.showDay">{{clock | date:'dd MMMM'}}</div>
             <div class="widget" id="day" ng-show="prefs.showDate">{{clock | date:'EEEE'}}</div>
             <div class="widget" id="temp" ng-show="prefs.showTemp">{{temp}}&deg;</div>
-            <div class="key-w" ng-show="prefs.showKey" ng-controller="ServerCtrl">
+            <div class="key-w" ng-show="prefs.showKey">
                 <div class="key">
                     <span class="key-c" style="background:{{color.online}}"></span>Online (200)
                 </div>
@@ -266,7 +269,7 @@
                 </div>
             </div>
         </div>
-        <div class="ind-w" ng-controller="ServerCtrl">
+        <div class="ind-w">
             <div class="srv" ng-repeat="(num, server) in servers">
                 <span class="ind" id="s{{num}}"><span id="sn{{num}}"></span></span>
                 <span class="nm" id="snm{{num}}" style="color:{{(servers[num].status == 'ERR') ? color.offline : '#FFFFFF'}}">{{server.name}}</span>

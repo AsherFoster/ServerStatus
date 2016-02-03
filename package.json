@@ -1,0 +1,22 @@
+{
+  "name": "server-indicator",
+  "version": "1.0.0",
+  "description": "A Angular.js web app to show the status of servers, and other helpful info",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AsherFoster/ServerStatus.git"
+  },
+  "keywords": [
+    "ServerStatus"
+  ],
+  "author": "Asher Foster",
+  "license": "MIT (See ./LICENSE)",
+  "bugs": {
+    "url": "https://github.com/AsherFoster/ServerStatus/issues"
+  },
+  "homepage": "https://github.com/AsherFoster/ServerStatus#readme"
+}
