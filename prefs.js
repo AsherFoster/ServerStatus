@@ -13,7 +13,7 @@ var prefs = {
     "temp":{
         "url":"http://stationdata.wunderground.com/cgi-bin/stationlookup?format=json&maxage=10&station=ICANTERB8&units=metric&v=2.0",
         "getTemp": function(data){
-            return data.stations.ICANTERB8.temperature || false;
+            return data.stations.ICANTERB8 ? data.stations.ICANTERB8.temperature : false;
         }
     },
     "threshold":2, // How many attempts must fail before updating status
@@ -34,6 +34,10 @@ var prefs = {
         {
             "name": "Developster Beta",
             "url": "http://beta.developster.io"
+        },
+        {
+            "name": "Developster API",
+            "url": "http://api.developster.io"
         },
 //        {
 //            "name": "Developster Alpha",

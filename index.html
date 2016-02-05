@@ -6,8 +6,8 @@
         <script src="prefs.js"></script>
         <script src="blocks.js"></script>
         <script type="text/javascript">
-            Date.prototype.getDayName = function(){   
-                return ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][this.getDay()];
+            Date.prototype.getDayName = function(day){   
+                return ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][day || this.getDay()];
             };
             Array.prototype.last = function(){
                 return this[this.length - 1];
@@ -28,9 +28,11 @@
                 var timeNow = new Date();
                 return timeNow.getHours()*60+timeNow.getMinutes();
             }
-            function get(url, callback){
+            function get(url, callback, errCallback){
                 var oReq = new XMLHttpRequest();
                 oReq.addEventListener("load", callback);
+                oReq.addEventListener("error", errCallback);
+                oReq.timeout = prefs.timeout;
                 oReq.open("GET", url);
                 oReq.send();
             }
@@ -45,11 +47,8 @@
                     if(val.check){
                         val.check(val, id);
                     }else{
-                        $http({
-                            method: "GET",
-                            url: prefs.testPage+encodeURIComponent(val.url)
-                        }).done(function(data, statusText, xhr){
-                            data = JSON.parse(data);
+                        get(prefs.testPage+encodeURIComponent(val.url), function(){
+                            data = JSON.parse(this.responseText);
                             switch(data.code){
                                 case "ERR":
                                     setStatus(id, {
@@ -77,7 +76,7 @@
                                     });
                                     break;
                             }
-                        },function(nope, err) {
+                        },function(err) {
                             setStatus(id, {
                                 "text":err
                             },{
@@ -88,6 +87,11 @@
                     }
                 })
             },prefs.checkRate);
+            
+            
+            /* CONTROLLER */
+            
+            
             app.controller('main', function($scope, $interval, $http) {
                 $scope.servers = prefs.servers;
                 $scope.color = prefs.colors;
@@ -249,7 +253,7 @@
             }
         </style>
     </head>
-    <body id="body" ng-controller="main">
+    <body id="body" ng-controller="main" style="background: {{prefs.colors.background || '#000'}}">
         <div class="wrap">
             <div class="widget" id="block" ng-show="prefs.showBlock" style="color:{{color.now.color || '#FFF'}}">{{color.now.name | uppercase}}</div>
             <div class="widget" id="nextBlock" ng-show="prefs.showNextBlock && !color.next.disabled" style="color:{{color.next.color}}">Next: {{color.next.name | uppercase}} at {{color.next.start | date:'HH:mm:ss'}}</div>
@@ -275,6 +279,6 @@
                 <span class="nm" id="snm{{num}}" style="color:{{(servers[num].status == 'ERR') ? color.offline : '#FFFFFF'}}">{{server.name}}</span>
             </div>
         </div>
-        <script>document.getElementById("body").setAttribute("style", "background: "+prefs.colors.background);</script>
+<!--        <script>document.getElementById("body").setAttribute("style", "background: "+prefs.colors.background);</script>-->
     </body>
 </html>
