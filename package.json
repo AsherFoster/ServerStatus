@@ -18,5 +18,9 @@
   "bugs": {
     "url": "https://github.com/AsherFoster/ServerStatus/issues"
   },
-  "homepage": "https://github.com/AsherFoster/ServerStatus#readme"
+  "homepage": "https://github.com/AsherFoster/ServerStatus#readme",
+  "dependencies": {
+    "express": "^4.13.4",
+    "net-ping": "^1.2.0"
+  }
 }

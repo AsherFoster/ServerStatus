@@ -5,37 +5,124 @@
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
         <script src="prefs.js"></script>
         <script src="blocks.js"></script>
+        <script src="text-fit.js"></script>
         <style type="text/css">
-            *{
-                font: 20px / 20px arial, sans-serif
+            html, body{
+                margin: 0;
+                font: 20px / 20px arial, sans-serif;
+                /*overflow: hidden;*/
+            }
+            #widgets{
+                position: absolute;
+                top: 0;
+                left: 0;
+                display: inline-block;
+                width: 30vw;
+                height: 100vh;
+            }
+            .widget{
+                text-align: justify;
+            }
+            .key{
+                margin: 0.4vh;
+                vertical-align: middle;
+                display: inline-block;
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+            }
+            #servers{
+                display: inline-block;
+                padding-top: 5vh;;
+                padding-left: 20vw;
+                margin-left: 30vw;
+                width: 50vw;
+                height: 100vh;
+
             }
             .server{
+                padding: 1vh;
                 font-size: 2em;
             }
-            .server:before{
+            .server-blob{
                 content: "";
                 display: inline-block;
-                border-radius: 50px;
-                height: 90px;
-                width: 90px;
+                border-radius: 50%;
+                height: 75px;
+                width: 75px;
                 background: #F00;
                 vertical-align: middle
             }
         </style>
-        <script type="text/javascript">
-            var app = angular.module("serverStatus", []);
-            
-            app.controller("main", function($scope, $http){
-                $scope.servers = prefs.servers;
-                $scope.prefs = prefs;
-            })
-        </script>
     </head>
     <body ng-controller="main" style="background:{{prefs.colors.background}};color:{{prefs.colors.text}}">
+        <div id="widgets">
+            <div data-fittext class="widget">
+                HOMEBASE
+            </div>
+            <div data-fittext class="widget">
+                Next: Lunch at 12:00
+            </div>
+            <div data-fittext class="widget" ng-bind="time | date: 'HH:mm:ss'"></div>
+            <div data-fittext class="widget" ng-bind="time | date: 'MMMM d'"></div>
+            <div data-fittext class="widget" ng-bind="time | date: 'EEEE'"></div>
+            <div data-fittext data-fittext-max="140" class="widget">
+                19.6&deg;
+            </div>
+            <div class="widget">
+                <div data-fittext><div class="key" style="background: {{prefs.colors.online}};"></div>Online (HTTP 200)</div>
+                <div data-fittext><div class="key" style="background: {{prefs.colors.abnormal}};"></div>Warning (HTTP != 200)</div>
+                <div data-fittext><div class="key" style="background: {{prefs.colors.abnormal}};"></div>HTTP Down (Pinged)</div>
+                <div data-fittext><div class="key" style="background: {{prefs.colors.offline}};"></div>Unreachable (No ping)</div>
+            </div>
+        </div>
         <div id="servers">
             <div class="server" id="server-{{ind}}" ng-repeat="(ind, server) in servers">
+                <span class="server-blob" id="sb-{{ind}}"></span>
                 {{server.name}}
             </div>
         </div>
+        <script type="text/javascript">
+            Date.prototype.getDayName = function(day){
+                return ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][day || this.getDay()];
+            };
+            Array.prototype.last = function(){
+                return this[this.length - 1];
+            };
+            function getMinutes(str) {
+                var time = str.split(':');
+                return time[0]*60+time[1]*1;
+            }
+            function minutesNow() {
+                var timeNow = new Date();
+                return timeNow.getHours()*60+timeNow.getMinutes();
+            }
+            function setStatus(id, color, title, text, critical){
+                document.getElementById("sb-"+id).style.background = color;
+                document.getElementById("sb"+id).title = title;
+                document.getElementById("sb-"+id).innerHTML = text || '';
+                document.getElementById("server-"+id).style.color = critical ? prefs.colors.offline : "";
+            }
+            var app = angular.module("serverStatus", ['ngFitText']);
+            app.controller("main", function($scope, $http, $interval){
+                $scope.servers = prefs.servers;
+                $scope.prefs = prefs;
+                $scope.time = new Date();
+
+                $interval(function(){ // Updates weather
+                    $http({
+                        method: "GET",
+                        url: prefs.temp.url
+                    }).then(function(data){
+                        $scope.temp = prefs.temp.parseTemp(data.data) || $scope.temp;
+                    }, function(nope, err, b) {
+                        console.error("Unable to load temperature. Err name: "+err+". Err details: "+b);
+                    });
+                }, 10000);
+                $interval(function(){ // Sets the time
+                    $scope.time = new Date();
+                }, 500);
+            });
+        </script>
     </body>
 </html>

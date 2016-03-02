@@ -41,7 +41,7 @@
                 document.getElementById("s"+id).title = status.text;
                 document.getElementById("sn"+id).innerHTML = status.code || '';
                 document.getElementById("snm"+id).style.color = color.text || prefs.colors.text;
-            };
+            }
             setInterval(function(){
                 prefs.servers.forEach(function(val, id){
                     if(val.check){
@@ -116,9 +116,9 @@
                                     "name": val.name
                                 },
                                 "next":next
-                            }
+                            };
                             found = true;
-                            return;
+
                         }
                     });
                     if(!found && minutesNow() < getMinutes(todayBlocks[0].start)){
