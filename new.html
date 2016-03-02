@@ -57,18 +57,12 @@
     </head>
     <body ng-controller="main" style="background:{{prefs.colors.background}};color:{{prefs.colors.text}}">
         <div id="widgets">
-            <div data-fittext class="widget">
-                HOMEBASE
-            </div>
-            <div data-fittext class="widget">
-                Next: Lunch at 12:00
-            </div>
+            <div data-fittext class="widget" ng-bind="block"></div>
+            <div data-fittext class="widget" ng-bind="nextBlock"></div>
             <div data-fittext class="widget" ng-bind="time | date: 'HH:mm:ss'"></div>
             <div data-fittext class="widget" ng-bind="time | date: 'MMMM d'"></div>
             <div data-fittext class="widget" ng-bind="time | date: 'EEEE'"></div>
-            <div data-fittext data-fittext-max="140" class="widget">
-                19.6&deg;
-            </div>
+            <div data-fittext class="widget" ng-bind="temp" data-fittext-max="140"></div>
             <div class="widget">
                 <div data-fittext><div class="key" style="background: {{prefs.colors.online}};"></div>Online (HTTP 200)</div>
                 <div data-fittext><div class="key" style="background: {{prefs.colors.abnormal}};"></div>Warning (HTTP != 200)</div>
@@ -119,6 +113,16 @@
                         console.error("Unable to load temperature. Err name: "+err+". Err details: "+b);
                     });
                 }, 10000);
+                $interval(function(){
+                    $http({
+                        method: "GET",
+                        url: "/check"
+                    }).then(function(data){
+
+                    }, function(nope, err, b){
+                        console.error("Unable to load server statuses. Err name: "+err+". Err details: "+b);
+                    });
+                }, 1000)
                 $interval(function(){ // Sets the time
                     $scope.time = new Date();
                 }, 500);

@@ -1,22 +1,10 @@
-var prefs = {
-    "showTime": true, // Toggle Time widget
-    "showDate": true, // Toggle Date widget
-    "showDay": true, // Toggle Day widget
-    "showBlock": true, // Toggle Block widget
-    "showNextBlock": true, // Toggle Next Block widget
-    "showcountBlock": true, // Toggle Count Down until next Block widget
-    "showTemp": true, // Toggle Temperature widget
-    "showKey": true, // Toggle Key widget
-    "testPage":"/test.php?url=", // Page to test if server is up. Url to test will be appended
-    "timeout":5000, // How long to wait for testPage to return status code
-    "checkRate":2000, // How often (in milliseconds) should the servers be checked
+module.exports = {
     "temp":{
         "url":"http://stationdata.wunderground.com/cgi-bin/stationlookup?format=json&maxage=10&station=ICANTERB8&units=metric&v=2.0",
-        "getTemp": function(data){
+        "parseTemp": function(data){
             return data.stations.ICANTERB8 ? data.stations.ICANTERB8.temperature : false;
         }
     },
-    "threshold":2, // How many attempts must fail before updating status
     "slack":{
         "enabled":false, // Whether to send messages to slack
         "webhook":"http://example.com", // Slack webhook. See "Webhook intergrations" in slack intergrations for more info
