@@ -3,14 +3,16 @@
     <head>
         <title>Server Status</title>
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+        <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300' rel='stylesheet' type='text/css'>
         <script src="prefs.js"></script>
         <script src="blocks.js"></script>
         <script src="text-fit.js"></script>
         <style type="text/css">
             html, body{
                 margin: 0;
-                font: 20px / 20px arial, sans-serif;
-                /*overflow: hidden;*/
+                font: 20px / 20px "Roboto", arial, sans-serif;
+                font-weight: 100;
+                overflow: hidden;
             }
             #widgets{
                 position: absolute;
@@ -45,24 +47,29 @@
                 font-size: 2em;
             }
             .server-blob{
-                content: "";
                 display: inline-block;
                 border-radius: 50%;
                 height: 75px;
                 width: 75px;
                 background: #F00;
+                font-size: 0.9em;
                 vertical-align: middle
+            }
+            .server-blob span{
+                position: relative;
+                top: 28px;
+                left: 6px;
             }
         </style>
     </head>
     <body ng-controller="main" style="background:{{prefs.colors.background}};color:{{prefs.colors.text}}">
         <div id="widgets">
-            <div data-fittext class="widget" ng-bind="block"></div>
-            <div data-fittext class="widget" ng-bind="nextBlock"></div>
-            <div data-fittext class="widget" ng-bind="time | date: 'HH:mm:ss'"></div>
-            <div data-fittext class="widget" ng-bind="time | date: 'MMMM d'"></div>
+            <div data-fittext class="widget" ng-bind="block.name" style="color: {{block.color || '#FFF'}}"></div>
+            <div data-fittext class="widget" ng-bind="nextBlock.name" style="color: {{nextBlock.color || '#FFF'}}"></div>
+            <div data-fittext class="widget" ng-bind="time | date: 'hh:mm:ss a'"></div>
             <div data-fittext class="widget" ng-bind="time | date: 'EEEE'"></div>
-            <div data-fittext class="widget" ng-bind="temp" data-fittext-max="140"></div>
+            <div data-fittext class="widget" ng-bind="time | date: 'MMMM d yyyy'"></div>
+            <div data-fittext class="widget" ng-bind="temp + '&deg;'" data-fittext-max="120"></div>
             <div class="widget">
                 <div data-fittext><div class="key" style="background: {{prefs.colors.online}};"></div>Online (HTTP 200)</div>
                 <div data-fittext><div class="key" style="background: {{prefs.colors.abnormal}};"></div>Warning (HTTP != 200)</div>
@@ -72,7 +79,7 @@
         </div>
         <div id="servers">
             <div class="server" id="server-{{ind}}" ng-repeat="(ind, server) in servers">
-                <span class="server-blob" id="sb-{{ind}}"></span>
+                <span class="server-blob" id="sb-{{ind}}"><span><loading></loading></span></span>
                 {{server.name}}
             </div>
         </div>
@@ -93,39 +100,91 @@
             }
             function setStatus(id, color, title, text, critical){
                 document.getElementById("sb-"+id).style.background = color;
-                document.getElementById("sb"+id).title = title;
-                document.getElementById("sb-"+id).innerHTML = text || '';
+                document.getElementById("sb-"+id).title = title;
+                document.getElementById("sb-"+id).getElementsByTagName("span")[0].innerHTML = text || '';
                 document.getElementById("server-"+id).style.color = critical ? prefs.colors.offline : "";
+            }
+            function today(){
+                return blocks[new Date().getDayName().substr(0, 3)]
             }
             var app = angular.module("serverStatus", ['ngFitText']);
             app.controller("main", function($scope, $http, $interval){
                 $scope.servers = prefs.servers;
                 $scope.prefs = prefs;
-                $scope.time = new Date();
 
-                $interval(function(){ // Updates weather
+                function getColor(){
+                    if(minutesNow() < getMinutes(today()[0].start))
+                        $scope.block = {
+                            "name": "Morning"
+                        };
+                    else if(minutesNow() > getMinutes(today().last().end))
+                        $scope.block = {
+                            "name": "Go Home"
+                        };
+                    else
+                        today().forEach(function(val, ind, arr){
+                            if(minutesNow() >= getMinutes(val.start) && minutesNow() <= getMinutes(val.end)){
+                                console.log("Found block");
+                                $scope.block = {
+                                    "name": val.name,
+                                    "color": val.color
+                                };
+                                if(arr[ind+1]){
+                                    $scope.nextBlock = {
+                                        "name": "Next: " + arr[ind+1].name + " at " + arr[ind+1].start,
+                                        "color": arr[ind+1].color
+                                    }
+                                }else{
+                                    $scope.nextBlock = {
+                                        "name": "Home",
+                                        "start": val.end
+                                    }
+                                }
+                            }
+                        });
+                }
+                function weather(){ // Updates weather
                     $http({
                         method: "GET",
                         url: prefs.temp.url
                     }).then(function(data){
-                        $scope.temp = prefs.temp.parseTemp(data.data) || $scope.temp;
+                        if(data.data.stations.ICANTERB8) $scope.temp = data.data.stations.ICANTERB8.temperature
                     }, function(nope, err, b) {
-                        console.error("Unable to load temperature. Err name: "+err+". Err details: "+b);
+                        console.error("Unable to load temperature. Err name: "+err);
                     });
-                }, 10000);
-                $interval(function(){
-                    $http({
-                        method: "GET",
-                        url: "/check"
-                    }).then(function(data){
-
-                    }, function(nope, err, b){
-                        console.error("Unable to load server statuses. Err name: "+err+". Err details: "+b);
-                    });
-                }, 1000)
-                $interval(function(){ // Sets the time
+                }
+                function check(){ // Updates servers
+                    prefs.servers.forEach(function(obj, ind, arr) {
+                        $http({
+                            method: "GET",
+                            url: "/check/" + ind
+                        }).then(function (data) {
+                            var s = data.data;
+                            if (s.type == "http" && s.code == 200) setStatus(ind, prefs.colors.online, s.text, "", false);
+                            else if (s.type == "http" && s.code != 200) setStatus(ind, prefs.colors.abnormal, s.text, s.code, false);
+                            else if (s.type == "ping" && s.success == true) setStatus(ind, prefs.colors.abnormal, s.text, "PING", false);
+                            else if (s.type == "none" && s.success == false) setStatus(ind, prefs.colors.offline, s.text, "", true);
+                        }, function (nope, err, b) {
+                            console.error("Unable to load server statuses. Err name: " + err + ". Err details: " + b);
+                        });
+                    })
+                }
+                function tick(){ // Sets the time
                     $scope.time = new Date();
-                }, 500);
+                }
+
+
+
+
+                weather();
+                getColor();
+                check();
+                tick();
+
+                $interval(weather, 10000);
+                $interval(getColor, 2000);
+                $interval(check, 2000);
+                $interval(tick, 500);
             });
         </script>
     </body>
