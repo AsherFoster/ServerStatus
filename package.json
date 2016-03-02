@@ -1,6 +1,6 @@
 {
   "name": "server-indicator",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "A Angular.js web app to show the status of servers, and other helpful info",
   "main": "main.js",
   "scripts": {
