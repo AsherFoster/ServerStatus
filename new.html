@@ -23,6 +23,7 @@
                 height: 100vh;
             }
             .widget{
+                margin: 0.05em 0;
                 text-align: justify;
             }
             .key{
@@ -66,6 +67,8 @@
         <div id="widgets">
             <div data-fittext class="widget" ng-bind="block.name" style="color: {{block.color || '#FFF'}}"></div>
             <div data-fittext class="widget" ng-bind="nextBlock.name" style="color: {{nextBlock.color || '#FFF'}}"></div>
+            <div data-fittext class="widget" ng-bind="nextBus"></div>
+            <div data-fittext class="widget">(FYI: It takes 10 minutes to walk there)</div>
             <div data-fittext class="widget" ng-bind="time | date: 'hh:mm:ss a'"></div>
             <div data-fittext class="widget" ng-bind="time | date: 'EEEE'"></div>
             <div data-fittext class="widget" ng-bind="time | date: 'MMMM d yyyy'"></div>
@@ -119,12 +122,16 @@
                 function updateBus(){
                     $http({
                         method: "GET",
-                        url: "/bus/10536"
+                        url: "/bus"
                     }).then(function(data){
-                        data = data.data;
-                        console.log("DATA: "+ data);
-                        var xml = parseXml(data);
-                        console.log(xml);
+                        var trip = [].slice.call(parseXml(data.data).getElementsByTagName("Trip"));
+                        trip.sort(function(a, b){
+                            if (a.attributes[0].value < b.attributes[0].value) return -1
+                            if (a.attributes[0].value > b.attributes[0].value) return 1
+                            if (a.attributes[0].value == b.attributes[0].value) return 0
+                        })
+                        console.log(trip);
+                        $scope.nextBus = "Purple arrives in " + trip[0].attributes[0].value + " mins";
                     }, function(err){
                         console.error("Unable to load bus statuses. Err name: " + err);
                     })
@@ -199,7 +206,7 @@
                 check();
                 tick();
 
-
+                $interval(updateBus, 10000);
                 $interval(weather, 10000);
                 $interval(getColor, 2000);
                 $interval(check, 2000);

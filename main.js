@@ -71,10 +71,8 @@ app.use(function(req, res, next){
             });
         });
     })
-    .get('/bus/:stop', function(req, res, next){
-        var stop = req.param.stop;
-        console.log("http://rtt.metroinfo.org.nz/rtt/public/utility/file.aspx?ContentType=SQLXML&Name=JPRoutePositionET2&PlatformNo="+stop);
-        http.get("http://rtt.metroinfo.org.nz/rtt/public/utility/file.aspx?ContentType=SQLXML&Name=JPRoutePositionET2&PlatformNo="+stop, function(response){
+    .get('/bus', function(req, res, next){
+        http.get("http://rtt.metroinfo.org.nz/rtt/public/utility/file.aspx?ContentType=SQLXML&Name=JPRoutePositionET2&PlatformNo=10536", function(response){
             var data = "";
             response.on('data', function(chunk){
                 data += chunk
