@@ -19,7 +19,7 @@
                 top: 0;
                 left: 0;
                 display: inline-block;
-                width: 30vw;
+                width: 25vw;
                 height: 100vh;
             }
             .widget{
@@ -69,7 +69,7 @@
             <div data-fittext class="widget" ng-bind="nextBlock.name" style="color: {{nextBlock.color || '#FFF'}}"></div>
             <div data-fittext class="widget" ng-bind="nextBus"></div>
             <div data-fittext class="widget">(FYI: It takes 10 minutes to walk there)</div>
-            <div data-fittext class="widget" ng-bind="time | date: 'hh:mm:ss a'"></div>
+            <div data-fittext class="widget" ng-bind="time | date: 'hh:mm:ss'"></div>
             <div data-fittext class="widget" ng-bind="time | date: 'EEEE'"></div>
             <div data-fittext class="widget" ng-bind="time | date: 'MMMM d yyyy'"></div>
             <div data-fittext class="widget" ng-bind="temp + '&deg;'" data-fittext-max="120"></div>
