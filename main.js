@@ -67,19 +67,19 @@ app.use(function(req, res, next){
                         time: new Date() - startTime,
                         text: "Ping Failed",
                         success: false
-                    })
+                    });
             })
         }).on('socket', function (socket) {
             socket.setTimeout(3000);
             socket.on('timeout', function() {
                 get.abort();
-                res.json({
-                    type: "none",
-                    code: 0,
-                    time: new Date() - startTime,
-                    text: error,
-                    success: false
-                });
+                //res.json({
+                //    type: "none",
+                //    code: 0,
+                //    time: new Date() - startTime,
+                //    text: "Timed out connecting to host",
+                //    success: false
+                //});
             });
         });
     })
