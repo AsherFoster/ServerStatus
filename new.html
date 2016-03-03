@@ -128,7 +128,7 @@
                     }).then(function(data){
                         var time,
                             dest = parseXml(data.data).getElementsByTagName("Destination");
-                        if(dest[0].children[0].attributes[0].value > dest[1].children[0].attributes[0].value) time = dest[1];
+                        if(Number(dest[0].children[0].attributes[0].value) > Number(dest[1].children[0].attributes[0].value)) time = dest[1];
                         // if the time in the first <Destination> is larger, use the second <Destonation>, else use the first <Destination>
                         else time = dest[0];
                         $scope.nextBus = "Purple arrives in " + (time.children[0].attributes[0].value || "666") + " mins";
@@ -148,7 +148,6 @@
                     else
                         today().forEach(function(val, ind, arr){
                             if(minutesNow() >= getMinutes(val.start) && minutesNow() <= getMinutes(val.end)){
-                                console.log("Found block");
                                 $scope.block = {
                                     "name": val.name,
                                     "color": val.color
