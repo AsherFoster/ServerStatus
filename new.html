@@ -111,7 +111,24 @@
             app.controller("main", function($scope, $http, $interval){
                 $scope.servers = prefs.servers;
                 $scope.prefs = prefs;
+                function parseXml (xmlStr) {
+                    return ( new window.DOMParser() ).parseFromString(xmlStr, "text/xml");
+                }
 
+
+                function updateBus(){
+                    $http({
+                        method: "GET",
+                        url: "/bus/10536"
+                    }).then(function(data){
+                        data = data.data;
+                        console.log("DATA: "+ data);
+                        var xml = parseXml(data);
+                        console.log(xml);
+                    }, function(err){
+                        console.error("Unable to load bus statuses. Err name: " + err);
+                    })
+                }
                 function getColor(){
                     if(minutesNow() < getMinutes(today()[0].start))
                         $scope.block = {
@@ -136,7 +153,7 @@
                                     }
                                 }else{
                                     $scope.nextBlock = {
-                                        "name": "Home",
+                                        "name": "Next: Home at " + arr.last().start,
                                         "start": val.end
                                     }
                                 }
@@ -164,8 +181,8 @@
                             else if (s.type == "http" && s.code != 200) setStatus(ind, prefs.colors.abnormal, s.text, s.code, false);
                             else if (s.type == "ping" && s.success == true) setStatus(ind, prefs.colors.abnormal, s.text, "PING", false);
                             else if (s.type == "none" && s.success == false) setStatus(ind, prefs.colors.offline, s.text, "", true);
-                        }, function (nope, err, b) {
-                            console.error("Unable to load server statuses. Err name: " + err + ". Err details: " + b);
+                        }, function (err) {
+                            console.error("Unable to load server statuses. Err name: " + err);
                         });
                     })
                 }
@@ -176,10 +193,12 @@
 
 
 
+                updateBus();
                 weather();
                 getColor();
                 check();
                 tick();
+
 
                 $interval(weather, 10000);
                 $interval(getColor, 2000);

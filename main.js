@@ -10,12 +10,15 @@ var express = require("express"),
     url = require("url"),
     ping = require("net-ping"),
     app = express();
+function parseXml (xmlStr) {
+    return ( new window.DOMParser() ).parseFromString(xmlStr, "text/xml");
+}
 app.use(function(req, res, next){
     //console.log(new Date().getHours() + ":" + new Date().getMinutes() + ":" + new Date().getSeconds() + " - " +
     //    req.method + " " + req.url);
     next();
-});
-app
+})
+
     .get('/', function(req, res, next){
         res.sendFile(__dirname + "/new.html");
     })
@@ -67,6 +70,19 @@ app
                     })
             });
         });
-    });
+    })
+    .get('/bus/:stop', function(req, res, next){
+        var stop = req.param.stop;
+        console.log("http://rtt.metroinfo.org.nz/rtt/public/utility/file.aspx?ContentType=SQLXML&Name=JPRoutePositionET2&PlatformNo="+stop);
+        http.get("http://rtt.metroinfo.org.nz/rtt/public/utility/file.aspx?ContentType=SQLXML&Name=JPRoutePositionET2&PlatformNo="+stop, function(response){
+            var data = "";
+            response.on('data', function(chunk){
+                data += chunk
+            })
+            response.on('end', function(){
+                res.send(data);
+            })
+        })
+    })
 
 app.listen(process.argv[2] || process.env.PORT || 8080);
