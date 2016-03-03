@@ -114,24 +114,24 @@
             app.controller("main", function($scope, $http, $interval){
                 $scope.servers = prefs.servers;
                 $scope.prefs = prefs;
+                $scope.nextBus = "Loading bus time";
                 function parseXml (xmlStr) {
                     return ( new window.DOMParser() ).parseFromString(xmlStr, "text/xml");
                 }
 
 
                 function updateBus(){
+                    console.log("Updating bus");
                     $http({
                         method: "GET",
                         url: "/bus"
                     }).then(function(data){
-                        var trip = [].slice.call(parseXml(data.data).getElementsByTagName("Trip"));
-                        trip.sort(function(a, b){
-                            if (a.attributes[0].value < b.attributes[0].value) return -1
-                            if (a.attributes[0].value > b.attributes[0].value) return 1
-                            if (a.attributes[0].value == b.attributes[0].value) return 0
-                        })
-                        console.log(trip);
-                        $scope.nextBus = "Purple arrives in " + trip[0].attributes[0].value + " mins";
+                        var time,
+                            dest = parseXml(data.data).getElementsByTagName("Destination");
+                        if(dest[0].children[0].attributes[0].value > dest[1].children[0].attributes[0].value) time = dest[1];
+                        // if the time in the first <Destination> is larger, use the second <Destonation>, else use the first <Destination>
+                        else time = dest[0];
+                        $scope.nextBus = "Purple arrives in " + (time.children[0].attributes[0].value || "666") + " mins";
                     }, function(err){
                         console.error("Unable to load bus statuses. Err name: " + err);
                     })
@@ -209,7 +209,7 @@
                 $interval(updateBus, 10000);
                 $interval(weather, 10000);
                 $interval(getColor, 2000);
-                $interval(check, 2000);
+                $interval(check, 4000);
                 $interval(tick, 500);
             });
         </script>

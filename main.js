@@ -8,7 +8,7 @@ var express = require("express"),
     http = require("http"),
     https = require("https"),
     url = require("url"),
-    ping = require("net-ping"),
+    ping = require("ping"),
     app = express();
 function parseXml (xmlStr) {
     return ( new window.DOMParser() ).parseFromString(xmlStr, "text/xml");
@@ -42,7 +42,7 @@ app.use(function(req, res, next){
     .get('/check/:id', function(req, res, next){
         var host = prefs.servers[req.params.id],
             startTime = new Date();
-        http.get(host.url, function (getRes) {
+        var get = http.get(host.url, function (getRes) {
             res.json({
                 type: "http",
                 code: getRes.statusCode,
@@ -51,23 +51,35 @@ app.use(function(req, res, next){
                 success: true
             })
         }).on('error', function (err) {
-            ping.createSession().pingHost(host, function (error, target) {
-                if (error)
+            ping.sys.probe(host, function(isAlive){
+                if (isAlive)
+                    res.json({
+                        type: "ping",
+                        code: 0,
+                        time: new Date() - startTime,
+                        text: "Pinged Host",
+                        success: true
+                    });
+                else
                     res.json({
                         type: "none",
                         code: 0,
                         time: new Date() - startTime,
-                        text: error,
+                        text: "Ping Failed",
                         success: false
-                    });
-                else
-                     res.json({
-                        type: "ping",
-                        code: 0,
-                        time: new Date() - startTime,
-                        text: "Ping Error",
-                        success: true
                     })
+            })
+        }).on('socket', function (socket) {
+            socket.setTimeout(3000);
+            socket.on('timeout', function() {
+                get.abort();
+                res.json({
+                    type: "none",
+                    code: 0,
+                    time: new Date() - startTime,
+                    text: error,
+                    success: false
+                });
             });
         });
     })
@@ -80,7 +92,7 @@ app.use(function(req, res, next){
             response.on('end', function(){
                 res.send(data);
             })
-        })
+        });
     })
 
 app.listen(process.argv[2] || process.env.PORT || 8080);

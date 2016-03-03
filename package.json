@@ -21,6 +21,6 @@
   "homepage": "https://github.com/AsherFoster/ServerStatus#readme",
   "dependencies": {
     "express": "^4.13.4",
-    "net-ping": "^1.2.0"
+    "ping": "^0.1.10"
   }
 }
