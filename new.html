@@ -50,8 +50,8 @@
             .server-blob{
                 display: inline-block;
                 border-radius: 50%;
-                height: 75px;
-                width: 75px;
+                height: 80px;
+                width: 80px;
                 background: #F00;
                 font-size: 0.9em;
                 vertical-align: middle
@@ -64,6 +64,12 @@
         </style>
     </head>
     <body ng-controller="main" style="background:{{prefs.colors.background}};color:{{prefs.colors.text}}">
+        <div id="servers">
+            <div class="server" id="server-{{ind}}" ng-repeat="(ind, server) in servers">
+                <span class="server-blob" id="sb-{{ind}}"><span><loading></loading></span></span>
+                {{server.name}}
+            </div>
+        </div>
         <div id="widgets">
             <div data-fittext class="widget" ng-bind="block.name" style="color: {{block.color || '#FFF'}}"></div>
             <div data-fittext class="widget" ng-bind="nextBlock.name" style="color: {{nextBlock.color || '#FFF'}}"></div>
@@ -78,12 +84,6 @@
                 <div data-fittext><div class="key" style="background: {{prefs.colors.abnormal}};"></div>Warning (HTTP != 200)</div>
                 <div data-fittext><div class="key" style="background: {{prefs.colors.abnormal}};"></div>HTTP Down (Pinged)</div>
                 <div data-fittext><div class="key" style="background: {{prefs.colors.offline}};"></div>Unreachable (No ping)</div>
-            </div>
-        </div>
-        <div id="servers">
-            <div class="server" id="server-{{ind}}" ng-repeat="(ind, server) in servers">
-                <span class="server-blob" id="sb-{{ind}}"><span><loading></loading></span></span>
-                {{server.name}}
             </div>
         </div>
         <script type="text/javascript">
