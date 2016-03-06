@@ -137,10 +137,15 @@
                     })
                 }
                 function getColor(){
-                    if(minutesNow() < getMinutes(today()[0].start))
+                    if(minutesNow() < getMinutes(today()[0].start)){
                         $scope.block = {
                             "name": "Morning"
                         };
+                        $scope.nextBlock = {
+                            "name": today()[0].name,
+                            "start": today()[0].start
+                        }
+                    }
                     else if(minutesNow() > getMinutes(today().last().end))
                         $scope.block = {
                             "name": "Go Home"
