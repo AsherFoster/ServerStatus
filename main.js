@@ -10,12 +10,9 @@ var express = require("express"),
     url = require("url"),
     ping = require("ping"),
     app = express();
-function parseXml (xmlStr) {
-    return ( new window.DOMParser() ).parseFromString(xmlStr, "text/xml");
-}
 app.use(function(req, res, next){
-    //console.log(new Date().getHours() + ":" + new Date().getMinutes() + ":" + new Date().getSeconds() + " - " +
-    //    req.method + " " + req.url);
+    console.log(new Date().getHours() + ":" + new Date().getMinutes() + ":" + new Date().getSeconds() + " - " +
+        req.method + " " + req.url);
     next();
 })
 
@@ -88,11 +85,11 @@ app.use(function(req, res, next){
             var data = "";
             response.on('data', function(chunk){
                 data += chunk
-            })
+            });
             response.on('end', function(){
                 res.send(data);
             })
         });
-    })
+    });
 
 app.listen(process.argv[2] || process.env.PORT || 8080);
