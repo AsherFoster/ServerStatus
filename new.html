@@ -110,6 +110,17 @@
             function today(){
                 return blocks[new Date().getDayName().substr(0, 3)]
             }
+            function getNextBlock(day, pos){
+                for(var i = pos; i < day.length; i++){
+                    if(day[i].type !== 'break'){
+                        return {
+                            name: "Next: " + day[i].name + " at " + day[i].start,
+                            start: day[i].start,
+                            color: day[i].color
+                        };
+                    }
+                }
+            }
             var app = angular.module("serverStatus", ['ngFitText']);
             app.controller("main", function($scope, $http, $interval){
                 $scope.servers = prefs.servers;
@@ -141,10 +152,8 @@
                         $scope.block = {
                             "name": "Morning"
                         };
-                        $scope.nextBlock = {
-                            "name": today()[0].name,
-                            "start": today()[0].start
-                        }
+                        $scope.nextBlock = getNextBlock(today(), 0)
+
                     }
                     else if(minutesNow() > getMinutes(today().last().end))
                         $scope.block = {
@@ -158,10 +167,7 @@
                                     "color": val.color
                                 };
                                 if(arr[ind+1]){
-                                    $scope.nextBlock = {
-                                        "name": "Next: " + arr[ind+1].name + " at " + arr[ind+1].start,
-                                        "color": arr[ind+1].color
-                                    }
+                                    $scope.nextBlock = getNextBlock(today(), ind+1);
                                 }else{
                                     $scope.nextBlock = {
                                         "name": "Next: Home at " + arr.last().start,
