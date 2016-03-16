@@ -188,20 +188,20 @@
                     });
                 }
                 function check(){ // Updates servers
-                    prefs.servers.forEach(function(obj, ind, arr) {
-                        $http({
-                            method: "GET",
-                            url: "/check/" + ind
-                        }).then(function (data) {
-                            var s = data.data;
+                    $http({
+                        method: "GET",
+                        url: "/check"
+                    }).then(function (data) {
+                        var s = data.data;
+                        s.forEach(function(s, ind){
                             if (s.type == "http" && s.code == 200) setStatus(ind, prefs.colors.online, s.text, "", false);
                             else if (s.type == "http" && s.code != 200) setStatus(ind, prefs.colors.abnormal, s.text, s.code, false);
                             else if (s.type == "ping" && s.success == true) setStatus(ind, prefs.colors.abnormal, s.text, "PING", false);
                             else if (s.type == "none" && s.success == false) setStatus(ind, prefs.colors.offline, s.text, "", true);
-                        }, function (err) {
-                            console.error("Unable to load server statuses. Err name: " + err);
-                        });
-                    })
+                        })
+                    }, function (err) {
+                        console.error("Unable to load server statuses. Err name: " + err);
+                    });
                 }
                 function tick(){ // Sets the time
                     $scope.time = new Date();

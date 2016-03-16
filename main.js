@@ -2,15 +2,63 @@
  * 
  * Test API for server indicator
  */
-
 var express = require("express"),
     prefs = require("./prefs"),
     http = require("http"),
     https = require("https"),
     url = require("url"),
     ping = require("ping"),
-    app = express();
-app.use(function(req, res, next){
+    app = express(),
+    statuses = [];
+function check(){
+    prefs.servers.forEach(function(obj, ind, arr){
+        var startTime = new Date();
+        var get = http.get(obj.url, function (getRes) {
+            statuses[ind] = {
+                type: "http",
+                code: getRes.statusCode,
+                time: new Date() - startTime,
+                text: http.STATUS_CODES[getRes.statusCode],
+                success: true
+            }
+        }).on('error', function (err) {
+            ping.sys.probe(obj.url, function(isAlive){
+                if (isAlive)
+                    statuses[ind] = {
+                        type: "ping",
+                        code: 0,
+                        time: new Date() - startTime,
+                        text: "Pinged Host",
+                        success: true
+                    };
+                else
+                    statuses[ind] = {
+                        type: "none",
+                        code: 0,
+                        time: new Date() - startTime,
+                        text: "Ping Failed",
+                        success: false
+                    };
+            })
+        }).on('socket', function (socket) {
+            socket.setTimeout(3000);
+            socket.on('timeout', function() {
+                get.abort();
+                statuses[ind] = {
+                    type: "none",
+                    code: 0,
+                    time: new Date() - startTime,
+                    text: "Timeout",
+                    success: false
+                };
+            });
+        });
+    })
+}
+check();
+setInterval(check, 5000);
+app
+    .use(function(req, res, next){
     console.log(new Date().getHours() + ":" + new Date().getMinutes() + ":" + new Date().getSeconds() + " - " +
         req.method + " " + req.url);
     next();
@@ -36,49 +84,8 @@ app.use(function(req, res, next){
     .get('/loading.svg', function(req, res, next){
         res.sendFile(__dirname + "/loading.svg");
     })
-    .get('/check/:id', function(req, res, next){
-        var host = prefs.servers[req.params.id],
-            startTime = new Date();
-        var get = http.get(host.url, function (getRes) {
-            res.json({
-                type: "http",
-                code: getRes.statusCode,
-                time: new Date() - startTime,
-                text: http.STATUS_CODES[getRes.statusCode],
-                success: true
-            })
-        }).on('error', function (err) {
-            ping.sys.probe(host, function(isAlive){
-                if (isAlive)
-                    res.json({
-                        type: "ping",
-                        code: 0,
-                        time: new Date() - startTime,
-                        text: "Pinged Host",
-                        success: true
-                    });
-                else
-                    res.json({
-                        type: "none",
-                        code: 0,
-                        time: new Date() - startTime,
-                        text: "Ping Failed",
-                        success: false
-                    });
-            })
-        }).on('socket', function (socket) {
-            socket.setTimeout(3000);
-            socket.on('timeout', function() {
-                get.abort();
-                //res.json({
-                //    type: "none",
-                //    code: 0,
-                //    time: new Date() - startTime,
-                //    text: "Timed out connecting to host",
-                //    success: false
-                //});
-            });
-        });
+    .get('/check', function(req, res, next){
+        res.json(statuses)
     })
     .get('/bus', function(req, res, next){
         http.get("http://rtt.metroinfo.org.nz/rtt/public/utility/file.aspx?ContentType=SQLXML&Name=JPRoutePositionET2&PlatformNo=10536", function(response){
