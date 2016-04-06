@@ -100,3 +100,4 @@ app
     });
 
 app.listen(process.argv[2] || process.env.PORT || 8080);
+console.log("Ready");
