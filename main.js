@@ -58,11 +58,11 @@ function check(){
 check();
 setInterval(check, 5000);
 app
-    .use(function(req, res, next){
-    console.log(new Date().getHours() + ":" + new Date().getMinutes() + ":" + new Date().getSeconds() + " - " +
-        req.method + " " + req.url);
-    next();
-})
+//     .use(function(req, res, next){
+//     console.log(new Date().getHours() + ":" + new Date().getMinutes() + ":" + new Date().getSeconds() + " - " +
+//         req.method + " " + req.url);
+//     next();
+// })
 
     .get('/', function(req, res, next){
         res.sendFile(__dirname + "/new.html");
