@@ -12,8 +12,9 @@ var express = require("express"),
     statuses = [];
 function check(){
     prefs.servers.forEach(function(obj, ind, arr){
-        var startTime = new Date();
-        var get = http.get(obj.url, function (getRes) {
+        var startTime = new Date(),
+            proto = obj.url.split(":", 1)[0] === "http" ? http : https;
+        var get = proto.get(obj.url, function (getRes){
             statuses[ind] = {
                 type: "http",
                 code: getRes.statusCode,
