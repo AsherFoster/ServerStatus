@@ -22,7 +22,7 @@ module.exports = {
         },
         {
             "name": "Developster API",
-            "url": "http://api.developster.io"
+            "url": "https://api.developster.io"
         },
 //        {
 //            "name": "Developster Alpha",
