@@ -14,21 +14,21 @@ module.exports = {
         // },
         {
             "name": "Developster Live",
-            "url": "http://www.developster.io"
+            "url": "https://developster.io"
         },
         {
             "name": "Developster Beta",
-            "url": "http://beta.developster.io"
+            "url": "https://beta.developster.io"
+        },
+	{
+            "name": "Developster Alpha",
+            "url": "http://alpha.developster.io",
+            "alert":false
         },
         {
             "name": "Developster API",
-            "url": "https://api.developster.io/admin/login"
+            "url": "https://api.developster.io/status"
         },
-//        {
-//            "name": "Developster Alpha",
-//            "url": "http://alpha.developster.io",
-//            "alert":false
-//        },
         {
             "name": "Innovate For ChCh",
             "url": "http://innovateforchch.nz"
