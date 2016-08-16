@@ -14,6 +14,11 @@
                 min-width: 100vw;
                 min-height: 100vh;
                 background: #000;
+                -webkit-transition: background 0.5s;
+                -moz-transition: background 0.5s;
+                -ms-transition: background 0.5s;
+                -o-transition: background 0.5s;
+                transition: background 0.5s;
                 margin: 0;
                 font-family: "Source Code Pro", monospace;
             }
@@ -52,7 +57,7 @@
             }
         </style>
     </head>
-    <body ng-cloak>
+    <body ng-cloak ng-style="{'background': bgCol}">
         <div id="servers-wrap">
             <div id="servers">
                 <div ng-repeat="server in servers" class="server">
@@ -63,8 +68,30 @@
         </div>
         <div id="notice" ng-bind="notice">Loading...</div>
         <script>
+            var OK_STATUSES = [200];
             var app = angular.module('status3', []);
             app.controller('main', function($scope, $http){
+                function startAlarm(){
+                    if(!$scope.alarmInterval){
+                        $scope.alarmInterval = setInterval(function(){
+                            $scope.$apply(function(scope){
+                                scope.bgCol = '#A00';
+                                setTimeout(function(){
+                                    $scope.$apply(function(scopeB){
+                                        scopeB.bgCol = '';
+                                    });
+                                }, 1000);
+                            });
+                        }, 2000);
+                    }
+                }
+                function stopAlarm(){
+                    if($scope.alarmInterval){
+                        clearInterval($scope.alarmInterval);
+                        delete $scope.alarmInterval;
+                        $scope.bgCol = '';
+                    }
+                }
                 function setNotice(message, time){
                     $scope.$apply(function(scope){
                         scope.notice = message;
@@ -94,24 +121,45 @@
                     setNotice('Ready!', 2000);
                     $scope.$apply(function(scope){
                         scope.servers = init.servers;
+                        if(init.servers.find(function(server){
+                            return OK_STATUSES.indexOf(server.status) === -1;
+                        })){
+                            startAlarm();
+                        }
                     });
                 });
                 socket.on('update', function(data){
                     $scope.$apply(function(scope){
                         scope.servers[data.id] = data;
+                        if(!scope.alarmInterval && OK_STATUSES.indexOf(data.status) === -1){
+                            console.log("Starting alarm");
+                            startAlarm();
+                        }else if(
+                            !scope.servers.find(function(server){
+                                return OK_STATUSES.indexOf(server.status) === -1;
+                            })
+                        ){
+                            console.log("Stopping via update");
+                            stopAlarm();
+                        }
                     });
                 });
                 socket.on('reconnect', function(){
+                    $scope.$apply(function(){
+                        stopAlarm();
+                    });
                     setNotice('Reconnected!', 2000);
                 });
                 socket.on('reconnecting', function(tryNum){
                     setNotice('Disconnected from API. (' + tryNum + ')');
                 });
                 socket.on('error', function(){
+                    startAlarm();
                     errAll();
                     setNotice('Socket Error');
                 });
                 socket.on('disconnect', function(){
+                    startAlarm();
                     errAll();
                     setNotice('Disconnected from API');
                 });
