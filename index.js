@@ -11,7 +11,8 @@ var express = require('express'),
 
     prefs = require('./config.json'),
 
-    servers = prefs.servers
+    servers = prefs.servers,
+    port = process.argv[2] || 8080
 ;
 function update(){
     servers.forEach(function(server){
@@ -48,6 +49,6 @@ io.on('connection', function(socket){
 });
 update();
 setInterval(update, 10000);
-server.listen(7001, function(){
-    console.log("Ready on port 7001");
+server.listen(port, function(){
+    console.log("Ready on port " + port);
 });
