@@ -54,7 +54,7 @@
     </head>
     <body ng-cloak>
         <div id="servers-wrap">
-            <div id="servers" ng-style="{'height': servers.length + 'em'}">
+            <div id="servers">
                 <div ng-repeat="server in servers" class="server">
                     <span class="server-icon" ng-class="{'server-ok': server.status === 200, 'server-warn': server.status !== 200 && server.status > 0}">{{server.status || "err" | uppercase}}</span>
                     <span class="server-name">{{server.name}}</span>
@@ -76,6 +76,11 @@
                             });
                         }, time);
                     }
+                }
+                function errAll(){
+                    $scope.servers.forEach(function(server){
+                        server.status = 'err';
+                    });
                 }
                 $scope.notice = 'Unable to connect to API';
                 $scope.servers = [];
@@ -99,10 +104,15 @@
                 socket.on('reconnect', function(){
                     setNotice('Reconnected!', 2000);
                 });
+                socket.on('reconnecting', function(tryNum){
+                    setNotice('Disconnected from API. (' + tryNum + ')');
+                });
                 socket.on('error', function(){
+                    errAll();
                     setNotice('Socket Error');
                 });
                 socket.on('disconnect', function(){
+                    errAll();
                     setNotice('Disconnected from API');
                 });
             });
