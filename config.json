@@ -1,0 +1,28 @@
+{
+  "servers": [
+    {
+      "name": "Developster Live",
+      "url": "https://developster.io"
+    },
+    {
+      "name": "Developster Beta",
+      "url": "https://beta.developster.io"
+    },
+    {
+      "name": "Developster Alpha",
+      "url": "https://alpha.developster.io"
+    },
+    {
+      "name": "Developster API",
+      "url": "https://api.developster.io/status"
+    },
+    {
+      "name": "Innovate For ChCh",
+      "url": "http://innovateforchch.nz"
+    },
+    {
+      "name": "Kohknowco",
+      "url": "http://www.kohknowco.org"
+    }
+  ]
+}

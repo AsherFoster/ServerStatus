@@ -6,7 +6,7 @@ var blockColors = {
     "orange":"#FF6600",
     "green":"#00FF00",
     "break":"#FFF"
-}
+};
 var blocks = {
     Mon: [
         {

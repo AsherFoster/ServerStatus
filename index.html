@@ -1,284 +1,111 @@
 <!DOCTYPE html>
-<html ng-app="status">
+<html ng-app="status3" ng-controller="main">
     <head>
-        <title>UPT Digital - Servers</title>
-        <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
-        <script src="prefs.js"></script>
-        <script src="blocks.js"></script>
-        <script type="text/javascript">
-            Date.prototype.getDayName = function(day){   
-                return ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][day || this.getDay()];
-            };
-            Array.prototype.last = function(){
-                return this[this.length - 1];
-            };
-            var app = angular.module('status', []),
-                a, b, today, color, found, next, temp,
-                todayBlocks = blocks[new Date().getDayName().substr(0,3)] || [{
-                    "data":"dayEmpty",
-                    "start":"0:00",
-                    "end":"23:59",
-                    "name":"NOTHING"
-                }];
-            function getMinutes(str) {
-                var time = str.split(':');
-                return time[0]*60+time[1]*1;
-            }
-            function minutesNow() {
-                var timeNow = new Date();
-                return timeNow.getHours()*60+timeNow.getMinutes();
-            }
-            function get(url, callback, errCallback){
-                var oReq = new XMLHttpRequest();
-                oReq.addEventListener("load", callback);
-                oReq.addEventListener("error", errCallback);
-                oReq.timeout = prefs.timeout;
-                oReq.open("GET", url);
-                oReq.send();
-            }
-            function setStatus(id, status, color){
-                document.getElementById("s"+id).style.background = color.color;
-                document.getElementById("s"+id).title = status.text;
-                document.getElementById("sn"+id).innerHTML = status.code || '';
-                document.getElementById("snm"+id).style.color = color.text || prefs.colors.text;
-            }
-            setInterval(function(){
-                prefs.servers.forEach(function(val, id){
-                    if(val.check){
-                        val.check(val, id);
-                    }else{
-                        get(prefs.testPage+encodeURIComponent(val.url), function(){
-                            data = JSON.parse(this.responseText);
-                            switch(data.code){
-                                case "ERR":
-                                    setStatus(id, {
-                                        "text":data.text
-                                    },{
-                                        "color":prefs.colors.offline,
-                                        "text":"#F00"
-                                    });
-                                    break;
-
-                                case 200:
-                                    setStatus(id, {
-                                        "text":data.text
-                                    },{
-                                        "color":prefs.colors.online
-                                    });
-                                    break;
-
-                                default:
-                                    setStatus(id, {
-                                        "text":data.text,
-                                        "code":data.code
-                                    },{
-                                        "color":prefs.colors.abnormal
-                                    });
-                                    break;
-                            }
-                        },function(err) {
-                            setStatus(id, {
-                                "text":err
-                            },{
-                                "color":prefs.colors.offline,
-                                "text":"#F00"
-                            });
-                        });
-                    }
-                })
-            },prefs.checkRate);
-            
-            
-            /* CONTROLLER */
-            
-            
-            app.controller('main', function($scope, $interval, $http) {
-                $scope.servers = prefs.servers;
-                $scope.color = prefs.colors;
-                $scope.prefs = prefs;
-                function tick() {
-                    $scope.clock = Date.now();
-                }
-                function getColor(){
-                    todayBlocks.forEach(function(val, ind, arr){
-                        if(getMinutes(val.start) <= minutesNow() && getMinutes(val.end) > minutesNow()){
-                            if(arr[ind+1]){
-                                next = arr[ind+1]
-                            }else{
-                                next = {
-                                    "name": "Home",
-                                    "start": val.end
-                                }
-                            }
-                            $scope.color = {
-                                "now":{
-                                    "color": val.color,
-                                    "name": val.name
-                                },
-                                "next":next
-                            };
-                            found = true;
-
-                        }
-                    });
-                    if(!found && minutesNow() < getMinutes(todayBlocks[0].start)){
-                        console.log("Before and stuff");
-                        $scope.color = {
-                            "now":{
-                                "name": "Morning"
-                            },
-                            "next":todayBlocks[0]
-                        }
-                    }else if(!found && minutesNow() >= getMinutes(todayBlocks.last().end)){
-                        $scope.color = {
-                            "now":{
-                                "name": "Go Home"
-                            },
-                            "next":{
-                                "disabled":true
-                            }
-                        }
-                    }else if(!found){
-                        $scope.color = {
-                            "now":{
-                                "name":"Error!"
-                            },
-                            "next":{
-                                "disabled":true
-                            }
-                        }
-                    }
-                    found = false
-                }
-                function getTemp(){
-                    $http({
-                        method: "GET",
-                        url: prefs.temp.url
-                    }).then(function(data){
-                        $scope.temp = prefs.temp.getTemp(data.data) || $scope.temp;
-                    }, function(nope, err, b) {
-                        console.error("Unable to load temperature. Err name: "+err+". Err details: "+b);
-                    });
-                }
-                
-                getColor();
-                tick();
-                getTemp();
-                
-                $interval(getTemp, 10000);
-                $interval(getColor, 2000);
-                $interval(tick, 100);
-            });
-            setTimeout(function(){
-                window.location.reload();
-            }, 3600000);
-        </script>
-        <style type="text/css">
+        <title>Server Status V3.0</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet">
+        <script src="/socket.io/socket.io.js"></script>
+        <style>
             *{
+                position: relative;
                 color: #FFF;
-                position: relative
             }
             html, body{
+                min-width: 100vw;
+                min-height: 100vh;
+                background: #000;
                 margin: 0;
-                width: 100%;
-                overflow-x: hidden;
-                overflow-y: hidden;
-                height: 100%;
-                font-family: 'Arial', sans-serif
+                font-family: "Source Code Pro", monospace;
             }
-            .wrap{
-                position: absolute;
-                top: -5px;
+            [ng-cloak]{
+                display: none !important;
             }
-            .wrap *{
-                font-size: 5.5em;
-            }
-            #block{
-                font-size: 9em;
-                margin-bottom: -20px;
-            }
-            #time{
-                font-size: 8em;
-                margin-bottom: -20px;
-            }
-            #date{
-                font-size: 4.8em;
-            }
-            #temp{
-                font-size: 10em;
-            }
-            #nextBlock{
-                font-size: 3em;
-                left: 5px
-            }
-            .srv{
-                top: 50px;
-                left: 35%;
-            }
-            .ind{
-                background: #F00 url(loading.svg) center no-repeat;
-                background-size: 50px;
-                margin: 20px;
-                width: 100px;
-                height: 100px;
-                border-radius: 50%;
-                vertical-align: middle;
-                display: inline-block;
-            }
-            .ind span{
-                top: 27px;
-                font-size: 2.5em;
+            #servers-wrap{
+                width: 100vw;
                 text-align: center;
-                display: block;
+                top: 50vh;
+                -webkit-transform: translateY(-50%);
+                -moz-transform: translateY(-50%);
+                -ms-transform: translateY(-50%);
+                -o-transform: translateY(-50%);
+                transform: translateY(-50%);
             }
-            .nm{
-                top: 25px;
-                font-size: 5em;
-            }
-            .key-c{
-                width: 50px;
-                height: 50px;
-                margin: 5px;
-                vertical-align: middle;
-                border-radius: 50%;
+            #servers{
+                text-align: left;
                 display: inline-block;
+                font-size: 3em;
             }
-            .key-w{
-                float: right;
-                position: fixed;
-                font-size: 1.5em;
+            .server-icon, #notice{
+                color: #F00;
             }
-            .key{
-                font-size: 2.4em;
+            .server-icon.server-ok{
+                color: #0F0;
+            }
+            .server-icon.server-warn{
+                color: #F60;
+            }
+            #notice{
+                position: absolute;
+                right: 1em;
+                bottom: 1em;
+                font-size: 2em;
             }
         </style>
     </head>
-    <body id="body" ng-controller="main" style="background: {{prefs.colors.background || '#000'}}">
-        <div class="wrap">
-            <div class="widget" id="block" ng-show="prefs.showBlock" style="color:{{color.now.color || '#FFF'}}">{{color.now.name | uppercase}}</div>
-            <div class="widget" id="nextBlock" ng-show="prefs.showNextBlock && !color.next.disabled" style="color:{{color.next.color}}">Next: {{color.next.name | uppercase}} at {{color.next.start | date:'HH:mm:ss'}}</div>
-            <div class="widget" id="time" ng-show="prefs.showTime" style="color:{ {color}}">{{clock | date:'HH:mm:ss'}}</div>
-            <div class="widget" id="date" ng-show="prefs.showDay">{{clock | date:'dd MMMM'}}</div>
-            <div class="widget" id="day" ng-show="prefs.showDate">{{clock | date:'EEEE'}}</div>
-            <div class="widget" id="temp" ng-show="prefs.showTemp">{{temp}}&deg;</div>
-            <div class="key-w" ng-show="prefs.showKey">
-                <div class="key">
-                    <span class="key-c" style="background:{{color.online}}"></span>Online (200)
-                </div>
-                <div class="key">
-                    <span class="key-c" style="background:{{color.abnormal}}"></span>Abnormal (!200)
-                </div>
-                <div class="key">
-                    <span class="key-c" style="background:{{color.offline}}"></span>Offline ({{prefs.timeout/1000}}s Timeout)
+    <body ng-cloak>
+        <div id="servers-wrap">
+            <div id="servers" ng-style="{'height': servers.length + 'em'}">
+                <div ng-repeat="server in servers" class="server">
+                    <span class="server-icon" ng-class="{'server-ok': server.status === 200, 'server-warn': server.status !== 200 && server.status > 0}">{{server.status || "err" | uppercase}}</span>
+                    <span class="server-name">{{server.name}}</span>
                 </div>
             </div>
         </div>
-        <div class="ind-w">
-            <div class="srv" ng-repeat="(num, server) in servers">
-                <span class="ind" id="s{{num}}"><span id="sn{{num}}"></span></span>
-                <span class="nm" id="snm{{num}}" style="color:{{(servers[num].status == 'ERR') ? color.offline : '#FFFFFF'}}">{{server.name}}</span>
-            </div>
-        </div>
-<!--        <script>document.getElementById("body").setAttribute("style", "background: "+prefs.colors.background);</script>-->
+        <div id="notice" ng-bind="notice">Loading...</div>
+        <script>
+            var app = angular.module('status3', []);
+            app.controller('main', function($scope, $http){
+                function setNotice(message, time){
+                    $scope.$apply(function(scope){
+                        scope.notice = message;
+                    });
+                    if(time){
+                        setTimeout(function(){
+                            $scope.$apply(function(scope){
+                                scope.notice = '';
+                            });
+                        }, time);
+                    }
+                }
+                $scope.notice = 'Unable to connect to API';
+                $scope.servers = [];
+                var socket = io();
+                socket.on('connect', function(){
+                    console.log("Connected to Socket");
+                    setNotice('Waiting for configuration...');
+                });
+                socket.on('init', function(init){
+                    console.log("Init Recieved: ", init);
+                    setNotice('Ready!', 2000);
+                    $scope.$apply(function(scope){
+                        scope.servers = init.servers;
+                    });
+                });
+                socket.on('update', function(data){
+                    $scope.$apply(function(scope){
+                        scope.servers[data.id] = data;
+                    });
+                });
+                socket.on('reconnect', function(){
+                    setNotice('Reconnected!', 2000);
+                });
+                socket.on('error', function(){
+                    setNotice('Socket Error');
+                });
+                socket.on('disconnect', function(){
+                    setNotice('Disconnected from API');
+                });
+            });
+        </script>
     </body>
 </html>
