@@ -25,7 +25,7 @@
             [ng-cloak]{
                 display: none !important;
             }
-            #servers-wrap{
+            #servers-wrap, #widgets-wrap{
                 width: 100vw;
                 text-align: center;
                 top: 50vh;
@@ -35,7 +35,7 @@
                 -o-transform: translateY(-50%);
                 transform: translateY(-50%);
             }
-            #servers{
+            #servers, #widgets{
                 text-align: left;
                 display: inline-block;
                 font-size: 3em;
@@ -58,7 +58,7 @@
         </style>
     </head>
     <body ng-cloak ng-style="{'background': bgCol}">
-        <div id="servers-wrap">
+        <div id="servers-wrap" ng-hide="widgetMode">
             <div id="servers">
                 <div ng-repeat="server in servers" class="server">
                     <span class="server-icon" ng-class="{'server-ok': server.status === 200, 'server-warn': server.status !== 200 && server.status > 0}">{{server.status || "err" | uppercase}}</span>
@@ -66,11 +66,25 @@
                 </div>
             </div>
         </div>
+        <div id="widgets-wrap" ng-show="widgetMode">
+            <div id="widgets">
+                <div data-fittext class="widget" ng-bind="time | date: 'hh:mm:ss'"></div>
+            </div>
+        </div>
         <div id="notice" ng-bind="notice">Loading...</div>
         <script>
             var OK_STATUSES = [200];
             var app = angular.module('status3', []);
-            app.controller('main', function($scope, $http){
+            app.controller('main', function($scope, $http, $interval){
+                $scope.widgetMode = false;
+                setInterval(function(){
+                    $scope.$apply(function(scope){
+                        scope.widgetMode = !scope.widgetMode;
+                    });
+                }, 5000);
+                $interval(function(){
+                    $scope.time = new Date();
+                });
                 function startAlarm(){
                     if(!$scope.alarmInterval){
                         $scope.alarmInterval = setInterval(function(){
