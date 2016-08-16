@@ -9,7 +9,7 @@ git clone https://github.com/AsherFoster/ServerStatus.git
 ```
 Install the required dependencies
 ```
-cd ServerStats
+cd ServerStatus
 npm install
 ```
 And boot the server
