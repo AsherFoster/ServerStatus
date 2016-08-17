@@ -5,6 +5,7 @@
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
         <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet">
         <script src="/socket.io/socket.io.js"></script>
+        <script src="/blocks.js"></script>
         <style>
             *{
                 position: relative;
@@ -68,34 +69,34 @@
         </div>
         <div id="widgets-wrap" ng-show="widgetMode">
             <div id="widgets">
-                <div data-fittext class="widget" ng-bind="time | date: 'hh:mm:ss'"></div>
+                <div class="widget" ng-bind="time | date: 'hh:mm:ss'"></div>
+                <div class="widget">{{block.now()}}</div>
             </div>
         </div>
         <div id="notice" ng-bind="notice">Loading...</div>
         <script>
             var OK_STATUSES = [200];
             var app = angular.module('status3', []);
-            app.controller('main', function($scope, $http, $interval){
+            app.controller('main', function($scope, $http, $interval, $timeout){
                 $scope.widgetMode = false;
-                setInterval(function(){
-                    $scope.$apply(function(scope){
-                        scope.widgetMode = !scope.widgetMode;
-                    });
+                $interval(function(){
+                    scope.widgetMode = !scope.widgetMode;
                 }, 5000);
                 $interval(function(){
                     $scope.time = new Date();
-                });
+                }, 500);
+                $interval(function(){
+                    $scope.block = blocks.find(function(block){
+                        if()
+                    });
+                }, 10000);
                 function startAlarm(){
                     if(!$scope.alarmInterval){
-                        $scope.alarmInterval = setInterval(function(){
-                            $scope.$apply(function(scope){
-                                scope.bgCol = '#A00';
-                                setTimeout(function(){
-                                    $scope.$apply(function(scopeB){
-                                        scopeB.bgCol = '';
-                                    });
-                                }, 1000);
-                            });
+                        $scope.alarmInterval = $interval(function(){
+                            scope.bgCol = '#A00';
+                            $timeout(function(){
+                                scopeB.bgCol = '';
+                            }, 1000);
                         }, 2000);
                     }
                 }
@@ -111,10 +112,8 @@
                         scope.notice = message;
                     });
                     if(time){
-                        setTimeout(function(){
-                            $scope.$apply(function(scope){
-                                scope.notice = '';
-                            });
+                        $timeout(function(){
+                            scope.notice = '';
                         }, time);
                     }
                 }
