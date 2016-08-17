@@ -86,7 +86,7 @@
                         $scope.alarmInterval = $interval(function(){
                             $scope.bgCol = '#A00';
                             $timeout(function(){
-                                scopeB.bgCol = '';
+                                $scope.bgCol = '';
                             }, 1000);
                         }, 2000);
                     }
