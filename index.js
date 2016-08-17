@@ -38,6 +38,9 @@ servers.forEach(function(server, ind){
 app
     .get('/', function(req, res){
         res.sendFile(__dirname + '/index.html');
+    })
+    .get('/blocks.js', function(req, res){
+        res.sendFile(__dirname + '/blocks.js');
     });
 
 
