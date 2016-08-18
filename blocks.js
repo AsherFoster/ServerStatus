@@ -13,7 +13,7 @@ var blocks = {
             start: "09:00",
             end: "10:30",
             color: blockColors.break,
-            name: "Homebase"
+            name: "Mentoring"
         },
         {
             start: "10:30",
@@ -81,7 +81,7 @@ var blocks = {
             "start":"09:00",
             "end":"10:30",
             "color":blockColors.break,
-            "name":"Homebase"
+            "name":"Mentoring"
         },
         {
             "start":"10:30",
@@ -149,7 +149,7 @@ var blocks = {
             "start":"09:00",
             "end":"10:30",
             "color":blockColors.break,
-            "name":"Homebase"
+            "name":"Mentoring"
         },
         {
             "start":"10:30",
