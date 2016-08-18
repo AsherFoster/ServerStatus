@@ -58,7 +58,7 @@
             }
         </style>
     </head>
-    <body ng-cloak ng-style="{'background': bgCol}">
+    <body ng-cloak ng-style="{'DISABLEDbackground': bgCol}">
         <div id="servers-wrap">
             <div id="servers">
                 <div class="widget" ng-bind="time | date: 'hh:mm:ss'"></div>
@@ -125,6 +125,7 @@
                     }
                 }
                 function stopAlarm(){
+                    console.log("Stopping Alarm");
                     if($scope.alarmInterval){
                         clearInterval($scope.alarmInterval);
                         delete $scope.alarmInterval;
@@ -161,19 +162,18 @@
                 var socket = io();
                 socket.on('connect', function(){
                     console.log("Connected to Socket");
-                    updateAlarm();
                     setNotice('Waiting for configuration...');
                 });
                 socket.on('init', function(init){
                     console.log("Init Recieved: ", init);
                     setNotice('Ready!', 2000);
                     $scope.$apply(function(scope){
-                        scope.servers = init.servers;
+                        $scope.servers = init.servers;
                         updateAlarm();
                     });
                 });
                 socket.on('update', function(data){
-                    $scope.$apply(function(scope){
+                    $scope.$apply(function(){
                         $scope.servers[data.id] = data;
                         updateAlarm();
                     });
