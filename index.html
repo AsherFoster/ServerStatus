@@ -87,6 +87,8 @@
                 }
 
                 function updateBlock(){
+                    $scope.blockColor = '';
+                    $scope.nextColor = '';
                     var today = blocks[["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][new Date().getDay()]];
                     if(minutesNow() < getMinutes(today[0].start)){
                         $scope.block = "Morning";
