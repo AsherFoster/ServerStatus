@@ -131,6 +131,16 @@
                         $scope.bgCol = '';
                     }
                 }
+                function updateAlarm(){
+                    if(
+                        $scope.servers.find(function(server){
+                            return OK_STATUSES.indexOf(server.status) === -1;
+                        })
+                    ){
+                        startAlarm();
+                    }else
+                        stopAlarm();
+                }
                 function setNotice(message, time){
                     $scope.$apply(function(scope){
                         scope.notice = message;
@@ -151,7 +161,7 @@
                 var socket = io();
                 socket.on('connect', function(){
                     console.log("Connected to Socket");
-                    stopAlarm();
+                    updateAlarm();
                     setNotice('Waiting for configuration...');
                 });
                 socket.on('init', function(init){
@@ -159,33 +169,17 @@
                     setNotice('Ready!', 2000);
                     $scope.$apply(function(scope){
                         scope.servers = init.servers;
-                        if(init.servers.find(function(server){
-                            return OK_STATUSES.indexOf(server.status) === -1;
-                        })){
-                            startAlarm();
-                        }
+                        updateAlarm();
                     });
                 });
                 socket.on('update', function(data){
                     $scope.$apply(function(scope){
                         scope.servers[data.id] = data;
-                        if(!scope.alarmInterval && OK_STATUSES.indexOf(data.status) === -1){
-                            console.log("Starting alarm");
-                            startAlarm();
-                        }else if(
-                            !scope.servers.find(function(server){
-                                return OK_STATUSES.indexOf(server.status) === -1;
-                            })
-                        ){
-                            console.log("Stopping via update");
-                            stopAlarm();
-                        }
+                        updateAlarm();
                     });
                 });
                 socket.on('reconnect', function(){
-                    $scope.$apply(function(){
-                        stopAlarm();
-                    });
+                    updateAlarm();
                     setNotice('Reconnected!', 2000);
                 });
                 socket.on('reconnecting', function(tryNum){
