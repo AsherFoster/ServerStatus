@@ -45,7 +45,7 @@ app
 
 
 io.on('connection', function(socket){
-    console.log(Date(), "New Connection");
+    console.log(new Date(), socket.conn.remoteAddress, "New Connection");
     socket.emit('init', {
         servers: servers
     });
