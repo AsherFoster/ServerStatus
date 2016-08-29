@@ -55,3 +55,11 @@ setInterval(update, 10000);
 server.listen(port, function(){
     console.log("Ready on port " + port);
 });
+process.on('SIGINT', function(){
+    console.log("Shutting down");
+    server.close();
+    setTimeout(function(){
+        console.log("Shutdown Timeout. Forcefully killing");
+        process.exit(1);
+    }, 5000);
+});
