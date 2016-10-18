@@ -1,4 +1,5 @@
 {
+  "temp": "http://stationdata.wunderground.com/cgi-bin/stationlookup?format=json&maxage=10&station=ICANTERB8&units=metric&v=2.0",
   "servers": [
     {
       "name": "Developster Live",
@@ -23,6 +24,14 @@
     {
       "name": "Kohknowco",
       "url": "http://www.kohknowco.org"
+    },
+    {
+      "name": "Mako",
+      "url": "tcping://mako.asherfoster.com:22"
+    },
+    {
+      "name": "Goblin",
+      "url": "tcping://goblin.asherfoster.com:22"
     }
   ]
 }

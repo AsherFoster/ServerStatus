@@ -26,7 +26,7 @@
             [ng-cloak]{
                 display: none !important;
             }
-            #servers-wrap, #widgets-wrap{
+            #servers-wrap{
                 width: 100vw;
                 text-align: center;
                 top: 50vh;
@@ -36,7 +36,7 @@
                 -o-transform: translateY(-50%);
                 transform: translateY(-50%);
             }
-            #servers, #widgets{
+            #servers{
                 text-align: left;
                 display: inline-block;
                 font-size: 3em;
@@ -58,149 +58,129 @@
             }
         </style>
     </head>
-    <body ng-cloak ng-style="{'DISABLEDbackground': bgCol}">
+    <body ng-cloak>
         <div id="servers-wrap">
             <div id="servers">
-                <div class="widget" ng-bind="time | date: 'hh:mm:ss'"></div>
+                <div class="widget">
+                    <span ng-bind="time | date: 'hh:mm:ss'"></span>
+                    -
+                    <span>{{temp || '?'}}&deg;</span>
+                </div>
                 <div class="widget">
                     <span ng-style="{color: blockColor}">{{block}}</span> then
                     <span ng-style="{color: nextColor}">{{nextBlock}}</span>
                 </div>
                 <div ng-repeat="server in servers" class="server">
-                    <span class="server-icon" ng-class="{'server-ok': server.status === 200, 'server-warn': server.status !== 200 && server.status > 0}">{{server.status || "err" | uppercase}}</span>
+                    <span class="server-icon" ng-class="{'server-ok': okStatus(server.status), 'server-warn': !okStatus(server.status) && server.status > 0}">{{server.status || "err" | uppercase}}</span>
                     <span class="server-name">{{server.name}}</span>
                 </div>
             </div>
         </div>
         <div id="notice" ng-bind="notice">Loading...</div>
         <script>
-            var OK_STATUSES = [200];
-            var app = angular.module('status3', []);
-            app.controller('main', function($scope, $http, $interval, $timeout){
-                function getMinutes(str) {
-                    var time = str.split(':');
-                    return time[0]*60+time[1]*1;
-                }
-                function minutesNow() {
-                    var timeNow = new Date();
-                    return timeNow.getHours()*60+timeNow.getMinutes();
-                }
+            var OK_STATUSES = [200, "OK!"];
+            angular.module('status3', [])
+                .controller('main', function($scope, $http, $interval, $timeout){
+                    function getMinutes(str) {
+                        var time = str.split(':');
+                        return time[0]*60+time[1]*1;
+                    }
+                    function minutesNow() {
+                        var timeNow = new Date();
+                        return timeNow.getHours()*60+timeNow.getMinutes();
+                    }
 
-                function updateBlock(){
-                    $scope.blockColor = '';
-                    $scope.nextColor = '';
-                    var today = blocks[["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][new Date().getDay()]];
-                    if(minutesNow() < getMinutes(today[0].start)){
-                        $scope.block = "Morning";
-                        $scope.nextBlock = today[0].name + " at " + today[0].start;
-                    }
-                    else if(minutesNow() > getMinutes(today[today.length - 1].end)){
-                        $scope.block = "Go Home";
-                        $scope.nextBlock = "Sleep";
-                    }else
-                        today.forEach(function(block, ind){
-                            if(minutesNow() >= getMinutes(block.start) && minutesNow() <= getMinutes(block.end)){
-                                $scope.block = block.name;
-                                $scope.blockColor = block.color;
-                                if(today[ind+1]){
-                                    $scope.nextBlock = today[ind + 1].name;
-                                    $scope.nextColor = today[ind + 1].color;
-                                }else{
-                                    $scope.nextBlock = "the end";
+                    function updateBlock(){
+                        $scope.blockColor = '';
+                        $scope.nextColor = '';
+                        var today = blocks[["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][new Date().getDay()]];
+                        if(minutesNow() < getMinutes(today[0].start)){
+                            $scope.block = "Morning";
+                            $scope.nextBlock = today[0].name + " at " + today[0].start;
+                        }
+                        else if(minutesNow() > getMinutes(today[today.length - 1].end)){
+                            $scope.block = "Go Home";
+                            $scope.nextBlock = "Sleep";
+                        }else
+                            today.forEach(function(block, ind){
+                                if(minutesNow() >= getMinutes(block.start) && minutesNow() <= getMinutes(block.end)){
+                                    $scope.block = block.name;
+                                    $scope.blockColor = block.color;
+                                    if(today[ind+1]){
+                                        $scope.nextBlock = today[ind + 1].name;
+                                        $scope.nextColor = today[ind + 1].color;
+                                    }else{
+                                        $scope.nextBlock = "the end";
+                                    }
                                 }
-                            }
+                            });
+                    }
+                    function tick(){
+                        $scope.time = new Date();
+                    }
+                    function setNotice(message, time){
+                        $scope.$apply(function(scope){
+                            scope.notice = message;
                         });
-                }
-                function tick(){
-                    $scope.time = new Date();
-                }
-                function startAlarm(){
-                    if(!$scope.alarmInterval){
-                        $scope.alarmInterval = $interval(function(){
-                            $scope.bgCol = '#A00';
+                        if(time){
                             $timeout(function(){
-                                $scope.bgCol = '';
-                            }, 1000);
-                        }, 2000);
+                                $scope.notice = '';
+                            }, time);
+                        }
                     }
-                }
-                function stopAlarm(){
-                    console.log("Stopping Alarm");
-                    if($scope.alarmInterval){
-                        clearInterval($scope.alarmInterval);
-                        delete $scope.alarmInterval;
-                        $scope.bgCol = '';
+                    function errAll(){
+                        $scope.servers.forEach(function(server){
+                            server.status = 'err';
+                        });
                     }
-                }
-                function updateAlarm(){
-                    if(
-                        $scope.servers.find(function(server){
-                            return OK_STATUSES.indexOf(server.status) === -1;
+                    $scope.okStatus = function(code){
+                        return OK_STATUSES.indexOf(code) > -1;
+                    };
+                    $scope.notice = 'Unable to connect to API';
+                    $scope.servers = [];
+                    var socket = io();
+                    socket.on('connect', function(){
+                        console.log("Connected to Socket");
+                        setNotice('Waiting for configuration...');
+                    });
+                    socket.on('init', function(init){
+                        console.log("Init Recieved: ", init);
+                        setNotice('Ready!', 2000);
+                        $scope.$apply(function(){
+                            $scope.temp = init.temp;
+                            $scope.servers = init.servers;
+                        });
+                    });
+                    socket.on('update', function(data){
+                        $scope.$apply(function(){
+                            $scope.servers[data.id] = data;
+                        });
+                    });
+                    socket.on('temp', function(data){
+                        $scope.$apply(function(){
+                            $scope.temp = data.temp;
                         })
-                    ){
-                        startAlarm();
-                    }else
-                        stopAlarm();
-                }
-                function setNotice(message, time){
-                    $scope.$apply(function(scope){
-                        scope.notice = message;
                     });
-                    if(time){
-                        $timeout(function(){
-                            $scope.notice = '';
-                        }, time);
-                    }
-                }
-                function errAll(){
-                    $scope.servers.forEach(function(server){
-                        server.status = 'err';
+                    socket.on('reconnect', function(){
+                        setNotice('Reconnected!', 2000);
                     });
-                }
-                $scope.notice = 'Unable to connect to API';
-                $scope.servers = [];
-                var socket = io();
-                socket.on('connect', function(){
-                    console.log("Connected to Socket");
-                    setNotice('Waiting for configuration...');
-                });
-                socket.on('init', function(init){
-                    console.log("Init Recieved: ", init);
-                    setNotice('Ready!', 2000);
-                    $scope.$apply(function(scope){
-                        $scope.servers = init.servers;
-                        updateAlarm();
+                    socket.on('reconnecting', function(tryNum){
+                        setNotice('Disconnected from API. (' + tryNum + ')');
                     });
-                });
-                socket.on('update', function(data){
-                    $scope.$apply(function(){
-                        $scope.servers[data.id] = data;
-                        updateAlarm();
+                    socket.on('error', function(){
+                        errAll();
+                        setNotice('Socket Error');
                     });
+                    socket.on('disconnect', function(){
+                        errAll();
+                        setNotice('Disconnected from API');
+                    });
+                    $scope.widgetMode = false;
+                    $interval(tick, 500);
+                    tick();
+                    updateBlock();
+                    $interval(updateBlock, 10000);
                 });
-                socket.on('reconnect', function(){
-                    updateAlarm();
-                    setNotice('Reconnected!', 2000);
-                });
-                socket.on('reconnecting', function(tryNum){
-                    setNotice('Disconnected from API. (' + tryNum + ')');
-                });
-                socket.on('error', function(){
-                    startAlarm();
-                    errAll();
-                    setNotice('Socket Error');
-                });
-                socket.on('disconnect', function(){
-                    startAlarm();
-                    errAll();
-                    setNotice('Disconnected from API');
-                });
-                $scope.widgetMode = false;
-                $interval(tick, 500);
-                tick();
-                updateBlock();
-                $interval(updateBlock, 10000);
-            });
         </script>
     </body>
 </html>
