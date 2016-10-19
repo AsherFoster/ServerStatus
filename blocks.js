@@ -114,7 +114,7 @@ var blocks = {
         {
             "start":"09:00",
             "end":"10:30",
-            "color":blockColors.break,
+            "color":blockColors.purple,
             "name":"Purple"
         },
         {
