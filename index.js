@@ -105,7 +105,7 @@ function checkTemp(){
                 io.emit('temp', {temp: temp});
             }
         })
-    })
+    }).on('error', err => console.error(err));
 }
 function update(){
     checkTemp();
