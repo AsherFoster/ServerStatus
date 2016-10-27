@@ -108,8 +108,12 @@ function checkTemp(){
     }).on('error', err => console.error(err));
 }
 function update(){
-    checkTemp();
-    servers.forEach(checkServer);
+    try{
+        checkTemp();
+        servers.forEach(checkServer);
+    }catch(e){
+        console.error(e);
+    }
 }
 
 servers.forEach(function(server, ind){
