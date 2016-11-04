@@ -59,7 +59,7 @@
         </style>
     </head>
     <body ng-cloak>
-        <div id="servers-wrap">
+        <div id="servers-wrap" ng-show="!mode || mode === 'default'">
             <div id="servers">
                 <div class="widget">
                     <span ng-bind="time | date: 'hh:mm:ss'"></span>
@@ -76,9 +76,14 @@
                 </div>
             </div>
         </div>
+        <div id="fireplace" ng-show="mode === 'fireplace'">
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/eyU3bRy2x44" frameborder="0" allowfullscreen></iframe>
+        </div>
         <div id="notice" ng-bind="notice">Loading...</div>
         <script>
             var OK_STATUSES = [200, "OK!"];
+            var MODES = ['default', 'fireplace'];
+
             angular.module('status3', [])
                 .controller('main', function($scope, $http, $interval, $timeout){
                     function getMinutes(str) {
@@ -151,6 +156,15 @@
                             $scope.servers = init.servers;
                         });
                     });
+                    socket.on('mode_update', function(payload){
+                        $scope.$apply(function(){
+                            if(MODES.indexOf(payload.mode) > -1)
+                                $scope.mode = payload.mode;
+                            else
+                                $scope.mode = 'default';
+                        })
+                    });
+
                     socket.on('update', function(data){
                         $scope.$apply(function(){
                             $scope.servers[data.id] = data;

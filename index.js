@@ -124,6 +124,9 @@ app
     .get('/', function(req, res){
         res.sendFile(__dirname + '/index.html');
     })
+    .get('/control', function(req, res){
+        res.sendFile(__dirname + '/control.html');
+    })
     .get('/blocks.js', function(req, res){
         res.sendFile(__dirname + '/blocks.js');
     });
@@ -135,6 +138,9 @@ io.on('connection', function(socket){
         servers: servers,
         temp: temp
     });
+    socket.on('mode_update', function(payload){
+        io.emit('mode_update', payload);
+    })
 });
 update();
 setInterval(update, 10000);
