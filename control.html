@@ -44,10 +44,11 @@
                 $scope.notice = 'Unable to connect to API';
                 var socket = io();
 
-                $scope.setMode = function(mode){
+                $scope.setMode = function(mode, params){
                   console.log("Sending mode update!", mode);
                   socket.emit('mode_update', {
-                    mode: mode
+                    mode: mode,
+                    params: params
                   })
                 };
 
