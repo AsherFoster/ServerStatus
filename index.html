@@ -60,6 +60,11 @@
                 height: 100vh;
                 width: 100vw;
             }
+            #message h1{
+                text-align: center;
+                top: calc(50vh - 2em);
+                font-size: 2em;
+            }
         </style>
     </head>
     <body ng-cloak>
@@ -83,10 +88,13 @@
         <div id="fireplace" ng-show="mode === 'fireplace'">
             <iframe src="https://www.youtube.com/embed/eyU3bRy2x44?autoplay=1&controls=0" frameborder="0" allowfullscreen></iframe>
         </div>
+        <div id="message" ng-show="mode === 'message'">
+            <h1 ng-bind="message"></h1>
+        </div>
         <div id="notice" ng-bind="notice">Loading...</div>
         <script>
             var OK_STATUSES = [200, "OK!"];
-            var MODES = ['default', 'fireplace'];
+            var MODES = ['default', 'fireplace', 'message'];
 
             angular.module('status3', [])
                 .controller('main', function($scope, $http, $interval, $timeout){
@@ -162,10 +170,13 @@
                     });
                     socket.on('mode_update', function(payload){
                         $scope.$apply(function(){
-                            if(MODES.indexOf(payload.mode) > -1)
+                            if(MODES.indexOf(payload.mode) > -1){
                                 $scope.mode = payload.mode;
-                            else
+                                $scope.params = payload.params;
+                            } else{
                                 $scope.mode = 'default';
+                                delete $scope.params;
+                            }
                         })
                     });
 

@@ -23,9 +23,11 @@
   </head>
   <body ng-cloak>
     <input ng-model="newMode" type="text">
-    <button ng-click="setMode(newMode)">Set Mode</button>
+    <input ng-model="newParams" type="text">
+    <button ng-click="setMode(newMode, newParams)">Set Mode</button>
     <p>Notice: {{notice}}</p>
     <p>Current Mode: {{mode}}</p>
+    <p>Current Params: {{params}}</p>
     <script>
       angular.module('status3', [])
               .controller('main', function($scope, $http, $interval, $timeout){
@@ -50,9 +52,14 @@
                 };
 
                 socket.on('mode_update', function(payload){
-                  console.log("Mode update!", payload);
                   $scope.$apply(function(){
-                    $scope.mode = payload.mode;
+                    if(MODES.indexOf(payload.mode) > -1){
+                      $scope.mode = payload.mode;
+                      $scope.params = payload.params;
+                    } else{
+                      $scope.mode = 'default';
+                      delete $scope.params;
+                    }
                   })
                 });
 
