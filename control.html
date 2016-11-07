@@ -22,8 +22,8 @@
     </style>
   </head>
   <body ng-cloak>
-    <input ng-model="newMode" type="text">
-    <input ng-model="newParams" type="text">
+    <input ng-model="newMode" type="text" placeholder="Mode">
+    <input ng-model="newParams" type="text" placeholder="Params">
     <button ng-click="setMode(newMode, newParams)">Set Mode</button>
     <p>Notice: {{notice}}</p>
     <p>Current Mode: {{mode}}</p>
