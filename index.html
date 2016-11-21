@@ -86,7 +86,7 @@
             </div>
         </div>
         <div id="fireplace" ng-if="mode === 'video'">
-            <iframe src="{{params}}" frameborder="0" allowfullscreen></iframe>
+            <iframe src="{{'https://www.youtube.com/embed/' + params + '?autoplay=1&controls=0'}}" frameborder="0" allowfullscreen></iframe>
         </div>
         <div id="message" ng-if="mode === 'message'">
             <h1 ng-bind="params"></h1>
@@ -97,6 +97,9 @@
             let MODES = ['default', 'video', 'message'];
 
             angular.module('status3', [])
+                .config(function($sceProvider){
+                  $sceProvider.enabled(false);
+                })
                 .controller('main', function($scope, $http, $interval, $timeout){
                     function getMinutes(str) {
                         let time = str.split(':');
