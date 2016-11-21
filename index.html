@@ -68,7 +68,7 @@
         </style>
     </head>
     <body ng-cloak>
-        <div id="servers-wrap" ng-show="!mode || mode === 'default'">
+        <div id="servers-wrap" ng-if="!mode || mode === 'default'">
             <div id="servers">
                 <div class="widget">
                     <span ng-bind="time | date: 'hh:mm:ss'"></span>
@@ -85,10 +85,10 @@
                 </div>
             </div>
         </div>
-        <div id="fireplace" ng-show="mode === 'fireplace'">
-            <iframe src="https://www.youtube.com/embed/eyU3bRy2x44?autoplay=1&controls=0" frameborder="0" allowfullscreen></iframe>
+        <div id="fireplace" ng-if="mode === 'video'">
+            <iframe src="{{params}}" frameborder="0" allowfullscreen></iframe>
         </div>
-        <div id="message" ng-show="mode === 'message'">
+        <div id="message" ng-if="mode === 'message'">
             <h1 ng-bind="params"></h1>
         </div>
         <div id="notice" ng-bind="notice">Loading...</div>
