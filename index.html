@@ -93,13 +93,13 @@
         </div>
         <div id="notice" ng-bind="notice">Loading...</div>
         <script>
-            var OK_STATUSES = [200, "OK!"];
-            var MODES = ['default', 'fireplace', 'message'];
+            let OK_STATUSES = [200, "OK!"];
+            let MODES = ['default', 'video', 'message'];
 
             angular.module('status3', [])
                 .controller('main', function($scope, $http, $interval, $timeout){
                     function getMinutes(str) {
-                        var time = str.split(':');
+                        let time = str.split(':');
                         return time[0]*60+time[1]*1;
                     }
                     function minutesNow() {

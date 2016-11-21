@@ -29,6 +29,7 @@
     <p>Current Mode: {{mode}}</p>
     <p>Current Params: {{params}}</p>
     <script>
+      const MODES = ['default', 'video', 'message'];
       angular.module('status3', [])
               .controller('main', function($scope, $http, $interval, $timeout){
                 function setNotice(message, time){
