@@ -89,7 +89,7 @@
             <iframe src="{{'https://www.youtube.com/embed/' + params + '?autoplay=1&controls=0'}}" frameborder="0" allowfullscreen></iframe>
         </div>
         <div id="message" ng-if="mode === 'message'">
-            <h1 ng-bind="params"></h1>
+            <h1 ng-bind-html="params"></h1>
         </div>
         <div id="notice" ng-bind="notice">Loading...</div>
         <script>
