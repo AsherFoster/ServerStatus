@@ -1,4 +1,10 @@
 # ServerStatus
+
+> ServerStatus was a web app I built when I was 15 and ran everything on a server hiding under a desk.
+> 
+> This is very very unsupported, and archived since, ya know, I haven't touched it since 2017.
+
+
 ## Information
 A web app for showing the status of your servers. Built with Angular and Node.
 
